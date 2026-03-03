@@ -22,7 +22,8 @@ try {
                 persistSession: true,
                 autoRefreshToken: true,
                 detectSessionInUrl: true,
-                storage: _safeStorage
+                storage: _safeStorage,
+                storageKey: 'macroflow-auth-v3' // Force fresh start to bypass corrupt local data
             }
         });
     }
