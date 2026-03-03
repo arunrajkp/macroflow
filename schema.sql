@@ -150,6 +150,31 @@ CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
 
+-- ── 9. Storage Setup (Avatars Bucket) ────────────────────────
+-- IMPORTANT: Run this in Supabase SQL Editor
+INSERT INTO storage.buckets (id, name, public) 
+VALUES ('avatars', 'avatars', true)
+ON CONFLICT (id) DO NOTHING;
+
+-- 1. Anyone can see avatars
+CREATE POLICY "Public Read" ON storage.objects FOR SELECT USING (bucket_id = 'avatars');
+
+-- 2. Users can upload to their own folder (folder name must match their ID)
+CREATE POLICY "User Upload" ON storage.objects FOR INSERT 
+WITH CHECK (
+  bucket_id = 'avatars' AND 
+  auth.role() = 'authenticated' AND
+  (storage.foldername(name))[1] = auth.uid()::text
+);
+
+-- 3. Users can update/delete their own folder
+CREATE POLICY "User Update/Delete" ON storage.objects FOR ALL 
+USING (
+  bucket_id = 'avatars' AND 
+  auth.role() = 'authenticated' AND
+  (storage.foldername(name))[1] = auth.uid()::text
+);
+
 -- ── 9. Seed Food Library (Expanded with Indian Cuisine) ───────
 INSERT INTO public.food_items (name, serving_size, kcal, protein_g, carbs_g, fats_g, fiber_g)
 VALUES

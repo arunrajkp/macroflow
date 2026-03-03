@@ -83,6 +83,29 @@ async function updateProfile(userId, updates) {
     return await _sb.from('profiles').update(updates).eq('id', userId);
 }
 
+async function uploadAvatar(userId, file) {
+    if (!_sb) return { error: 'No SB' };
+
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${userId}-${Math.random()}.${fileExt}`;
+    const filePath = `${userId}/${fileName}`;
+
+    // 1. Upload file to 'avatars' bucket
+    const { error: uploadError } = await _sb.storage
+        .from('avatars')
+        .upload(filePath, file);
+
+    if (uploadError) return { error: uploadError };
+
+    // 2. Get public URL
+    const { data: { publicUrl } } = _sb.storage
+        .from('avatars')
+        .getPublicUrl(filePath);
+
+    // 3. Update profile with new URL
+    return await updateProfile(userId, { avatar_url: publicUrl });
+}
+
 function calculateHealthMetrics(p) {
     if (!p || !p.weight_kg || !p.height_cm) return null;
     const hM = p.height_cm / 100;

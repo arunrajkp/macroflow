@@ -247,7 +247,9 @@
         <div class="header">
             <div class="avatar-wrap">
                 <div class="avatar" id="avatar-display">👤</div>
-                <div class="edit-avatar" onclick="updateAvatar()">📸</div>
+                <input type="file" id="avatar-input" accept="image/*" style="display: none"
+                    onchange="handleFileSelect(event)">
+                <div class="edit-avatar" onclick="document.getElementById('avatar-input').click()">📸</div>
             </div>
             <h2 id="display-name">User Name</h2>
             <p style="font-size: 13px; color: #9ba3bf;" id="display-email">email@example.com</p>
@@ -425,11 +427,27 @@
             }
         }
 
-        async function updateAvatar() {
-            const url = prompt("Enter Image URL for profile picture:");
-            if (url) {
-                const { error } = await updateProfile(currentUser.id, { avatar_url: url });
-                if (!error) loadProfile();
+        async function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            // Optional: check file size (e.g. max 2MB)
+            if (file.size > 2 * 1024 * 1024) {
+                showToast('Image too large (Max 2MB)', 'error');
+                return;
+            }
+
+            const avatarDisplay = document.getElementById('avatar-display');
+            const originalHTML = avatarDisplay.innerHTML;
+            avatarDisplay.innerHTML = '⏳';
+
+            const { error } = await uploadAvatar(currentUser.id, file);
+            if (error) {
+                showToast('Upload failed: ' + error.message, 'error');
+                avatarDisplay.innerHTML = originalHTML;
+            } else {
+                showToast('Avatar updated!');
+                loadProfile();
             }
         }
 
