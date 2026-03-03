@@ -110,7 +110,12 @@ function calculateHealthMetrics(p) {
 // ── Food Items ───────────────────────────────────────────────
 async function searchFoods(query = '') {
     let q = _sb.from('food_items').select('*').order('name');
-    if (query) q = q.ilike('name', `%${query}%`);
+    if (query.trim()) {
+        const keywords = query.trim().split(/\s+/);
+        keywords.forEach(word => {
+            q = q.ilike('name', `%${word}%`);
+        });
+    }
     return q.limit(30);
 }
 
