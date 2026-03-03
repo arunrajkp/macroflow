@@ -41,9 +41,16 @@
             overflow: hidden
         }
 
-        @media (min-width: 480px) {
+        @media (max-width: 480px) {
+            .phone {
+                height: 100%;
+                border-radius: 0;
+            }
+        }
+
+        @media (min-width: 481px) {
             body {
-                padding: 24px 16px;
+                padding: 20px 16px;
             }
 
             .phone {
@@ -110,6 +117,13 @@
             border-radius: 14px;
             padding: 4px;
             margin-bottom: 24px
+        }
+
+        .tab-content {
+            flex: 1;
+            padding: 30px;
+            overflow-y: auto;
+            padding-bottom: 50px;
         }
 
         .tab {

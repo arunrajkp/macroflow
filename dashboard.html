@@ -40,7 +40,22 @@
             position: relative
         }
 
-        @media (min-width: 480px) {
+        @media (max-width: 480px) {
+            .phone {
+                height: 100%;
+                border-radius: 0;
+            }
+
+            .bottom-nav {
+                border-radius: 0;
+                height: 80px;
+                /* Taller on mobile for thumb reach */
+                padding-bottom: env(safe-area-inset-bottom);
+                /* iOS support */
+            }
+        }
+
+        @media (min-width: 481px) {
             body {
                 padding: 20px 16px;
             }
@@ -401,7 +416,8 @@
             display: flex;
             align-items: center;
             height: 72px;
-            border-radius: 0 0 40px 40px
+            border-radius: 0 0 40px 40px;
+            z-index: 1000;
         }
 
         .nav-item {

@@ -40,7 +40,20 @@
             position: relative
         }
 
-        @media (min-width: 480px) {
+        @media (max-width: 480px) {
+            .phone {
+                height: 100%;
+                border-radius: 0;
+            }
+
+            .bottom-nav {
+                border-radius: 0;
+                height: 80px;
+                padding-bottom: env(safe-area-inset-bottom);
+            }
+        }
+
+        @media (min-width: 481px) {
             body {
                 padding: 20px 16px;
             }
@@ -289,7 +302,7 @@
             align-items: center;
             height: 72px;
             border-radius: 0 0 40px 40px;
-            z-index: 5;
+            z-index: 1000;
         }
 
         .nav-item {
