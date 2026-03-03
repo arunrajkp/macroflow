@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>MacroFlow Diagnostic</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            padding: 20px;
+            line-height: 1.5;
+            background: #f0f2f5;
+        }
+
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            max-width: 600px;
+            margin: auto;
+        }
+
+        .status {
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 6px;
+        }
+
+        .success {
+            background: #dcfce7;
+            color: #166534;
+            border: 1px solid #bbf7d0;
+        }
+
+        .error {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        pre {
+            background: #f8fafc;
+            padding: 10px;
+            border-radius: 4px;
+            overflow: auto;
+            font-size: 13px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="card">
+        <h2>🛠️ MacroFlow Diagnostic</h2>
+        <p>This tool checks why your app can't connect to Supabase.</p>
+
+        <div id="results">
+            <p>Testing connectivity... please wait.</p>
+        </div>
+    </div>
+
+    <script>
+        async function runTest() {
+            const results = document.getElementById('results');
+            const supabaseUrl = 'https://zfovszmjrtmerasczmsc.supabase.co/rest/v1/';
+            const cdnUrl = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
+
+            let html = '';
+
+            // 1. Test CDN
+            html += '<h3>1. CDN Check (JS Library)</h3>';
+            try {
+                const start = Date.now();
+                const res = await fetch(cdnUrl, { method: 'HEAD' });
+                html += `<div class="status success">✅ CDN Reachable (${Date.now() - start}ms)</div>`;
+            } catch (e) {
+                html += `<div class="status error">❌ CDN Blocked: ${e.message}</div>`;
+            }
+
+            // 2. Test Supabase API
+            html += '<h3>2. Supabase API Check</h3>';
+            try {
+                const start = Date.now();
+                const res = await fetch(supabaseUrl, { method: 'GET' });
+                // We don't care if it's 401 or whatever, as long as it reaches
+                html += `<div class="status success">✅ Supabase API reached (${res.status}) in ${Date.now() - start}ms</div>`;
+            } catch (e) {
+                html += `<div class="status error">❌ Supabase Unreachable: ${e.message}</div>`;
+                html += `<p>This usually means your ISP (Jio) is blocking the connection or providing the wrong IP.</p>`;
+            }
+
+            // 3. System Info
+            html += '<h3>3. Diagnostic Data</h3>';
+            html += `<pre>Browser: ${navigator.userAgent}\nProtocol: ${location.protocol}\nURL: ${location.href}</pre>`;
+
+            results.innerHTML = html;
+        }
+
+        runTest();
+    </script>
+</body>
+
+</html>

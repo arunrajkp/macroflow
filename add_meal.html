@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MacroFlow – Add Meal</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="app.js"></script>
+    <style>
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #e8ecf4;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px 16px
+        }
+
+        .phone {
+            width: 390px;
+            min-height: 820px;
+            background: #fff;
+            border-radius: 40px;
+            box-shadow: 0 30px 80px rgba(0, 0, 0, .18);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative
+        }
+
+        .top-bar {
+            padding: 22px 24px 18px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid #f0f2f8;
+            flex-shrink: 0
+        }
+
+        .back-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #1a1f36
+        }
+
+        .top-bar h2 {
+            font-size: 18px;
+            font-weight: 700;
+            color: #1a1f36
+        }
+
+        .content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px 24px 170px
+        }
+
+        .flabel {
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 1.4px;
+            color: #2ecc71;
+            text-transform: uppercase;
+            margin-bottom: 8px
+        }
+
+        .finput {
+            width: 100%;
+            padding: 14px 18px;
+            border: none;
+            border-radius: 14px;
+            background: #f0faf4;
+            font-size: 15px;
+            color: #1a1f36;
+            font-family: 'Inter', sans-serif;
+            outline: none;
+            margin-bottom: 18px;
+            transition: box-shadow .2s
+        }
+
+        .finput:focus {
+            box-shadow: 0 0 0 2px rgba(46, 204, 113, .3)
+        }
+
+        .finput::placeholder {
+            color: #a0c8aa
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #1a1f36;
+            margin-bottom: 14px
+        }
+
+        /* Ingredient item */
+        .ingr-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 14px;
+            border-radius: 14px;
+            background: #f8fafb;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: background .2s;
+            border: 1.5px solid transparent
+        }
+
+        .ingr-item.selected {
+            background: #f0faf4;
+            border-color: #c8e6cc
+        }
+
+        .checkbox {
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            border: 2px solid #c8e6cc;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: all .2s;
+            font-size: 13px;
+            font-weight: 700;
+            color: transparent
+        }
+
+        .checkbox.chk {
+            background: #2ecc71;
+            border-color: #2ecc71;
+            color: #fff
+        }
+
+        .ingr-info {
+            flex: 1
+        }
+
+        .ingr-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1a1f36
+        }
+
+        .ingr-sub {
+            font-size: 11px;
+            color: #9ba3bf;
+            margin-top: 2px
+        }
+
+        .ingr-kcal {
+            font-size: 14px;
+            font-weight: 700;
+            color: #2ecc71;
+            text-align: right;
+            margin-right: 8px;
+        }
+
+        .qty-mini {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: #fff;
+            padding: 4px 8px;
+            border-radius: 8px;
+            border: 1px solid #e0e4f0;
+            margin-top: 6px;
+            width: fit-content;
+        }
+
+        .qty-btn-m {
+            width: 20px;
+            height: 20px;
+            border: none;
+            background: #f0faf4;
+            color: #2ecc71;
+            border-radius: 4px;
+            font-weight: 800;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .qty-val-m {
+            font-size: 12px;
+            font-weight: 700;
+            color: #1a1f36;
+            min-width: 24px;
+            text-align: center;
+        }
+
+        /* Add ingredient form */
+        .add-ingr-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            width: 100%;
+            padding: 13px 16px;
+            border-radius: 14px;
+            border: 2px dashed #c8e6cc;
+            background: transparent;
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            font-weight: 600;
+            color: #2ecc71;
+            cursor: pointer;
+            margin: 8px 0;
+            transition: all .2s
+        }
+
+        .add-ingr-btn:hover {
+            background: #f0faf4
+        }
+
+        .ingr-form {
+            display: none;
+            background: #f0faf4;
+            border-radius: 14px;
+            padding: 16px;
+            margin-top: 4px
+        }
+
+        .ingr-form.open {
+            display: block
+        }
+
+        .mini-lbl {
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 1.2px;
+            color: #2ecc71;
+            text-transform: uppercase;
+            margin-bottom: 4px
+        }
+
+        .mini-input {
+            width: 100%;
+            padding: 10px 12px;
+            border-radius: 10px;
+            border: 1.5px solid #c8e6cc;
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            color: #1a1f36;
+            outline: none;
+            margin-bottom: 10px;
+            background: #fff
+        }
+
+        .mini-input:focus {
+            border-color: #2ecc71
+        }
+
+        .row-2 {
+            display: flex;
+            gap: 10px
+        }
+
+        .row-2>div {
+            flex: 1
+        }
+
+        .save-ingr-btn {
+            width: 100%;
+            padding: 10px;
+            background: #2ecc71;
+            border: none;
+            border-radius: 10px;
+            color: #fff;
+            font-weight: 700;
+            font-size: 14px;
+            font-family: 'Inter', sans-serif;
+            cursor: pointer;
+            transition: opacity .2s
+        }
+
+        .save-ingr-btn:hover {
+            opacity: .85
+        }
+
+        /* Totals */
+        .totals-bar {
+            position: absolute;
+            bottom: 72px;
+            left: 0;
+            right: 0;
+            background: #fff;
+            border-top: 1px solid #f0f2f8;
+            padding: 12px 24px
+        }
+
+        .totals-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 4px
+        }
+
+        .total-cell {
+            text-align: center
+        }
+
+        .total-lbl {
+            font-size: 9px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            color: #9ba3bf;
+            text-transform: uppercase
+        }
+
+        .total-val {
+            font-size: 15px;
+            font-weight: 700;
+            color: #2ecc71;
+            margin-top: 2px
+        }
+
+        /* Save button */
+        .save-btn {
+            position: absolute;
+            bottom: 8px;
+            left: 24px;
+            right: 24px;
+            padding: 16px;
+            background: #2ecc71;
+            border: none;
+            border-radius: 50px;
+            color: #fff;
+            font-size: 16px;
+            font-weight: 700;
+            font-family: 'Inter', sans-serif;
+            cursor: pointer;
+            box-shadow: 0 8px 24px rgba(46, 204, 113, .35);
+            transition: transform .15s, opacity .2s
+        }
+
+        .save-btn:hover {
+            transform: translateY(-2px)
+        }
+
+        .save-btn:disabled {
+            opacity: .6;
+            cursor: not-allowed;
+            transform: none
+        }
+
+        .spinner {
+            font-size: 12px;
+            color: #9ba3bf;
+            text-align: center;
+            padding: 16px
+        }
+    </style>
+</head>
+
+<body>
+    <div class="phone">
+        <div class="top-bar">
+            <button class="back-btn" onclick="history.back()">
+                <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                    <polyline points="15 18 9 12 15 6" />
+                </svg>
+            </button>
+            <h2 id="meal-title">Breakfast</h2>
+            <div style="width:28px"></div>
+        </div>
+
+        <div class="content">
+            <div class="flabel">Meal / Food Name</div>
+            <input id="food-name" class="finput" type="text" placeholder="e.g. Scrambled Eggs" />
+
+            <div class="flabel">Portion Size</div>
+            <input id="portion-size" class="finput" type="text" placeholder="e.g. 2 large eggs, 200g" />
+
+            <div class="section-title">Quick Add Ingredients</div>
+            <div id="ingr-list">
+                <div class="spinner">⏳ Loading…</div>
+            </div>
+
+            <button class="add-ingr-btn" id="toggle-add-form">
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                    <line x1="12" y1="5" x2="12" y2="19" />
+                    <line x1="5" y1="12" x2="19" y2="12" />
+                </svg>
+                Add Custom Ingredient
+            </button>
+
+            <div class="ingr-form" id="ingr-form">
+                <div class="mini-lbl">Name</div>
+                <input id="ni-name" class="mini-input" type="text" placeholder="e.g. Spinach" />
+                <div class="row-2">
+                    <div>
+                        <div class="mini-lbl">Calories (kcal)</div>
+                        <input id="ni-kcal" class="mini-input" type="number" placeholder="50" min="0" step="0.1" />
+                    </div>
+                    <div>
+                        <div class="mini-lbl">Protein (g)</div>
+                        <input id="ni-prot" class="mini-input" type="number" placeholder="3" min="0" step="0.1" />
+                    </div>
+                </div>
+                <div class="row-2">
+                    <div>
+                        <div class="mini-lbl">Carbs (g)</div>
+                        <input id="ni-carbs" class="mini-input" type="number" placeholder="5" min="0" step="0.1" />
+                    </div>
+                    <div>
+                        <div class="mini-lbl">Fats (g)</div>
+                        <input id="ni-fats" class="mini-input" type="number" placeholder="1" min="0" step="0.1" />
+                    </div>
+                </div>
+                <div class="mini-lbl">Serving Size</div>
+                <input id="ni-serving" class="mini-input" type="text" placeholder="e.g. 100g"
+                    style="margin-bottom:12px" />
+                <button class="save-ingr-btn" id="save-ingr-btn" onclick="saveNewIngredient()">Add Ingredient</button>
+            </div>
+        </div>
+
+        <!-- Totals -->
+        <div class="totals-bar">
+            <div class="totals-grid">
+                <div class="total-cell">
+                    <div class="total-lbl">Protein</div>
+                    <div class="total-val" id="dp">0g</div>
+                </div>
+                <div class="total-cell">
+                    <div class="total-lbl">Carbs</div>
+                    <div class="total-val" id="dc">0g</div>
+                </div>
+                <div class="total-cell">
+                    <div class="total-lbl">Fats</div>
+                    <div class="total-val" id="df">0g</div>
+                </div>
+                <div class="total-cell">
+                    <div class="total-lbl">Calories</div>
+                    <div class="total-val" id="dk">0</div>
+                </div>
+            </div>
+        </div>
+
+        <button class="save-btn" id="save-meal-btn" onclick="saveMeal()">Save Meal</button>
+    </div>
+
+    <script>
+        const params = new URLSearchParams(location.search);
+        const mealType = params.get('type') || 'Breakfast';
+        document.getElementById('meal-title').textContent = mealType;
+
+        let currentUser = null;
+        let allIngredients = [];
+        let selectedItems = new Map(); // id -> quantity
+
+        async function init() {
+            currentUser = await requireAuth();
+            if (!currentUser) return;
+            await loadIngredients();
+        }
+
+        async function loadIngredients() {
+            const { data, error } = await searchFoods();
+            allIngredients = data || [];
+            renderIngredients();
+        }
+
+        function renderIngredients() {
+            document.getElementById('ingr-list').innerHTML = allIngredients.map(f => {
+                const qty = selectedItems.get(f.id);
+                const isSel = qty !== undefined;
+                const displayQty = isSel ? qty : 1;
+
+                const kcal = (f.kcal * displayQty).toFixed(0);
+
+                return `
+    <div class="ingr-item ${isSel ? 'selected' : ''}" onclick="toggleIngr(${f.id})">
+      <div class="checkbox ${isSel ? 'chk' : ''}">✓</div>
+      <div class="ingr-info">
+        <div class="ingr-name">${f.name}</div>
+        <div class="ingr-sub">${f.protein_g}g Protein · ${f.carbs_g}g Carbs · ${f.serving_size || ''}</div>
+        ${isSel ? `
+        <div class="qty-mini" onclick="event.stopPropagation()">
+          <button class="qty-btn-m" onclick="updateQty(${f.id}, -0.5)">-</button>
+          <span class="qty-val-m">${displayQty}</span>
+          <button class="qty-btn-m" onclick="updateQty(${f.id}, 0.5)">+</button>
+        </div>` : ''}
+      </div>
+      <div class="ingr-kcal">${kcal} kcal</div>
+    </div>`;
+            }).join('');
+            updateTotals();
+        }
+
+        function toggleIngr(id) {
+            if (selectedItems.has(id)) {
+                selectedItems.delete(id);
+            } else {
+                selectedItems.set(id, 1);
+            }
+            renderIngredients();
+        }
+
+        function updateQty(id, delta) {
+            const qty = selectedItems.get(id);
+            if (qty === undefined) return;
+            selectedItems.set(id, Math.max(0.5, qty + delta));
+            renderIngredients();
+        }
+
+        function updateTotals() {
+            let p = 0, c = 0, f = 0, k = 0;
+            selectedItems.forEach((qty, id) => {
+                const food = allIngredients.find(fi => fi.id === id);
+                if (food) {
+                    p += (Number(food.protein_g) || 0) * qty;
+                    c += (Number(food.carbs_g) || 0) * qty;
+                    f += (Number(food.fats_g) || 0) * qty;
+                    k += (Number(food.kcal) || 0) * qty;
+                }
+            });
+            document.getElementById('dp').textContent = Math.round(p) + 'g';
+            document.getElementById('dc').textContent = Math.round(c) + 'g';
+            document.getElementById('df').textContent = Math.round(f) + 'g';
+            document.getElementById('dk').textContent = Math.round(k) + ' kcal';
+        }
+
+        document.getElementById('toggle-add-form').addEventListener('click', () => {
+            document.getElementById('ingr-form').classList.toggle('open');
+        });
+
+        async function saveNewIngredient() {
+            const name = document.getElementById('ni-name').value.trim();
+            const kcal = parseFloat(document.getElementById('ni-kcal').value) || 0;
+            const protein = parseFloat(document.getElementById('ni-prot').value) || 0;
+            const carbs = parseFloat(document.getElementById('ni-carbs').value) || 0;
+            const fats = parseFloat(document.getElementById('ni-fats').value) || 0;
+            const serving = document.getElementById('ni-serving').value.trim() || '1 serving';
+            if (!name) { showToast('Please enter a name', 'error'); return; }
+            const btn = document.getElementById('save-ingr-btn');
+            showLoading(true, btn);
+            const { data, error } = await addCustomFood(currentUser.id, { name, kcal, protein_g: protein, carbs_g: carbs, fats_g: fats, serving_size: serving });
+            if (error) { showToast('Error: ' + error.message, 'error'); showLoading(false, btn); return; }
+            allIngredients.unshift(data);
+            selectedItems.set(data.id, 1);
+            document.getElementById('ingr-form').classList.remove('open');
+            ['ni-name', 'ni-kcal', 'ni-prot', 'ni-carbs', 'ni-fats', 'ni-serving'].forEach(id => document.getElementById(id).value = '');
+            showLoading(false, btn);
+            renderIngredients();
+            showToast('✅ Ingredient added!');
+        }
+
+        async function saveMeal() {
+            const name = document.getElementById('food-name').value.trim();
+            const portion = document.getElementById('portion-size').value.trim();
+            if (selectedItems.size === 0 && !name) {
+                showToast('Select ingredients or enter a food name', 'error'); return;
+            }
+            const btn = document.getElementById('save-meal-btn');
+            showLoading(true, btn);
+            const items = Array.from(selectedItems.entries()).map(([id, qty]) => {
+                const f = allIngredients.find(fi => fi.id === id);
+                return {
+                    id: f.id,
+                    name: f.name,
+                    quantity: qty,
+                    kcal: f.kcal * qty,
+                    protein_g: f.protein_g * qty,
+                    carbs_g: f.carbs_g * qty,
+                    fats_g: f.fats_g * qty
+                };
+            });
+            // If only a custom name was provided with no library items, log as a single item with 0 macros
+            if (items.length === 0 && name) {
+                items.push({ name, quantity: 1, kcal: 0, protein_g: 0, carbs_g: 0, fats_g: 0 });
+            }
+            const { error } = await logMeal({
+                userId: currentUser.id, mealType,
+                mealName: name, portionSize: portion,
+                logDate: todayISO(), items
+            });
+            if (error) { showToast('Failed: ' + error.message, 'error'); showLoading(false, btn); return; }
+            showToast('✅ Meal saved!');
+            setTimeout(() => window.location.href = 'dashboard.html', 900);
+        }
+
+        init();
+    </script>
+</body>
+
+</html>

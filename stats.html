@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MacroFlow – Statistics</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="app.js"></script>
+    <style>
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #e8ecf4;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px 16px
+        }
+
+        .phone {
+            width: 390px;
+            min-height: 820px;
+            background: #f5f7fc;
+            border-radius: 40px;
+            box-shadow: 0 30px 80px rgba(0, 0, 0, .18);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative
+        }
+
+        .header {
+            background: #fff;
+            padding: 20px 24px 16px;
+            border-bottom: 1px solid #f0f2f8;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1a1f36;
+        }
+
+        .content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px 24px 90px;
+        }
+
+        .card {
+            background: #fff;
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+
+        .card-title {
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 1.2px;
+            color: #9ba3bf;
+            text-transform: uppercase;
+            margin-bottom: 16px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .stat-box {
+            background: #f8fafc;
+            border-radius: 16px;
+            padding: 16px;
+            text-align: center;
+        }
+
+        .stat-val {
+            font-size: 20px;
+            font-weight: 700;
+            color: #1a1f36;
+        }
+
+        .stat-lbl {
+            font-size: 10px;
+            color: #9ba3bf;
+            font-weight: 600;
+            margin-top: 4px;
+        }
+
+        .chart-placeholder {
+            height: 150px;
+            display: flex;
+            align-items: flex-end;
+            gap: 12px;
+            padding: 10px 0;
+            border-bottom: 2px solid #f0f2f8;
+        }
+
+        .chart-bar {
+            flex: 1;
+            background: #4d7cf6;
+            border-radius: 4px 4px 0 0;
+            min-height: 10px;
+            transition: height 0.6s ease;
+            position: relative;
+        }
+
+        .chart-bar::after {
+            content: attr(data-day);
+            position: absolute;
+            bottom: -22px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 9px;
+            color: #9ba3bf;
+            font-weight: 600;
+        }
+
+        /* Nav */
+        .bottom-nav {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #fff;
+            border-top: 1px solid #f0f2f8;
+            display: flex;
+            align-items: center;
+            height: 72px;
+            border-radius: 0 0 40px 40px
+        }
+
+        .nav-item {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            cursor: pointer;
+            color: #c0c6d9;
+            text-decoration: none;
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: .8px;
+            text-transform: uppercase;
+            padding: 8px 0;
+            transition: color .2s
+        }
+
+        .nav-item.active {
+            color: #4d7cf6
+        }
+
+        .nav-item svg {
+            width: 20px;
+            height: 20px
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 0;
+            color: #9ba3bf;
+            font-size: 14px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="phone">
+        <div class="header">
+            <h1>Activity Stats</h1>
+        </div>
+
+        <div class="content">
+            <div class="card">
+                <div class="card-title">Weekly Calories</div>
+                <div id="kcal-chart" class="chart-placeholder">
+                    <!-- Bars injected here -->
+                </div>
+                <div style="margin-top:25px; text-align:center; font-size:12px; color:#1a1f36; font-weight:600">
+                    Average: <span id="avg-kcal">0</span> kcal/day
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">7-Day Habit Consistency</div>
+                <div class="stats-grid" id="habit-stats">
+                    <div class="empty-state">Loading habits...</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">7-Day Macro Spread</div>
+                <div class="stats-grid">
+                    <div class="stat-box">
+                        <div class="stat-val" id="st-prot">0g</div>
+                        <div class="stat-lbl">Protein</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-val" id="st-carbs">0g</div>
+                        <div class="stat-lbl">Carbs</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-val" id="st-fats">0g</div>
+                        <div class="stat-lbl">Fats</div>
+                    </div>
+                    <div class="stat-box" style="background:#eef2ff">
+                        <div class="stat-val" id="st-days">0</div>
+                        <div class="stat-lbl">Active Days</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bottom-nav">
+            <a class="nav-item" href="dashboard.html">
+                <svg fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
+                </svg>
+                Today
+            </a>
+            <a class="nav-item active" href="stats.html">
+                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+                </svg>
+                Stats
+            </a>
+            <a class="nav-item" href="log-intake.html">
+                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <line x1="12" y1="5" x2="12" y2="19" />
+                    <line x1="5" y1="12" x2="19" y2="12" />
+                </svg>
+                Log
+            </a>
+            <a class="nav-item" href="checklist.html">
+                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <polyline points="9 11 12 14 22 4" />
+                    <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
+                </svg>
+                Checklist
+            </a>
+            <a class="nav-item" onclick="signOut()" href="#">
+                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                    <polyline points="16 17 21 12 16 7" />
+                    <line x1="21" y1="12" x2="9" y2="12" />
+                </svg>
+                Logout
+            </a>
+        </div>
+    </div>
+
+    <script>
+        let currentUser = null;
+
+        async function init() {
+            currentUser = await requireAuth();
+            if (!currentUser) return;
+            loadStats();
+        }
+
+        async function loadStats() {
+            // Get last 7 days of summaries
+            const days = [];
+            const now = new Date();
+            for (let i = 0; i < 7; i++) {
+                const d = new Date();
+                d.setDate(now.getDate() - i);
+                days.push(d.toISOString().split('T')[0]);
+            }
+            days.reverse();
+
+            const chartContainer = document.getElementById('kcal-chart');
+            chartContainer.innerHTML = '<div class="empty-state">Loading stats...</div>';
+
+            try {
+                // Fetch all 7 days (simplified: 7 requests in parallel)
+                const results = await Promise.all(days.map(d => getDailySummary(currentUser.id, d)));
+                const { data: habitRows } = await getWeeklyChecklist(currentUser.id, days);
+
+                let totalKcalAll = 0, totalP = 0, totalC = 0, totalF = 0, activeDays = 0;
+                const dailyTotals = [];
+
+                results.forEach((res, idx) => {
+                    let dKcal = 0, dP = 0, dC = 0, dF = 0;
+                    if (res.data && res.data.length > 0) {
+                        activeDays++;
+                        res.data.forEach(m => {
+                            dKcal += Number(m.total_kcal) || 0;
+                            dP += Number(m.total_protein) || 0;
+                            dC += Number(m.total_carbs) || 0;
+                            dF += Number(m.total_fats) || 0;
+                        });
+                    }
+                    dailyTotals.push({ kcal: dKcal, date: days[idx] });
+                    totalKcalAll += dKcal;
+                    totalP += dP;
+                    totalC += dC;
+                    totalF += dF;
+                });
+
+                // Render Chart
+                const maxKcal = Math.max(...dailyTotals.map(t => t.kcal), 2000);
+                chartContainer.innerHTML = dailyTotals.map((t, idx) => {
+                    const h = (t.kcal / maxKcal) * 100;
+                    const dayName = new Date(t.date).toLocaleDateString('en-US', { weekday: 'short' });
+                    return `<div class="chart-bar" style="height:${h}%" data-day="${dayName}" title="${t.kcal} kcal"></div>`;
+                }).join('');
+
+                // Render Habits
+                const hContainer = document.getElementById('habit-stats');
+                const taskMapping = {
+                    water_3l: { label: 'Water 3L', val: 0 },
+                    sleep_8h: { label: 'Sleep 8h', val: 0 },
+                    gym: { label: 'Workout', val: 0 },
+                    meditation: { label: 'Mindful', val: 0 },
+                    no_sugar: { label: 'No Sugar', val: 0 },
+                    clean_eating: { label: 'Clean Eat', val: 0 }
+                };
+
+                (habitRows || []).forEach(row => {
+                    Object.keys(taskMapping).forEach(task => {
+                        if (row[task]) taskMapping[task].val++;
+                    });
+                });
+
+                hContainer.innerHTML = Object.values(taskMapping).map(t => {
+                    const pct = Math.round((t.val / 7) * 100);
+                    return `
+                        <div class="stat-box" style="background:${pct > 50 ? '#f0faf4' : '#fef2f2'}">
+                            <div class="stat-val" style="color:${pct > 50 ? '#2ecc71' : '#ef4444'}">${pct}%</div>
+                            <div class="stat-lbl">${t.label}</div>
+                        </div>`;
+                }).join('');
+
+                document.getElementById('avg-kcal').textContent = Math.round(totalKcalAll / 7);
+                document.getElementById('st-prot').textContent = Math.round(totalP / 7) + 'g';
+                document.getElementById('st-carbs').textContent = Math.round(totalC / 7) + 'g';
+                document.getElementById('st-fats').textContent = Math.round(totalF / 7) + 'g';
+                document.getElementById('st-days').textContent = activeDays;
+
+            } catch (err) {
+                chartContainer.innerHTML = '<div class="empty-state">Error loading stats</div>';
+                console.error(err);
+            }
+        }
+
+        init();
+    </script>
+</body>
+
+</html>
