@@ -66,8 +66,19 @@
 
         .header-right {
             display: flex;
-            gap: 10px;
+            align-items: center;
+            gap: 12px;
             margin-top: 6px
+        }
+
+        .refresh-spin {
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            100% {
+                transform: rotate(360deg);
+            }
         }
 
         .icon-btn {
@@ -466,9 +477,11 @@
             </div>
             <div class="header-right">
                 <div style="position:relative">
-                    <input type="date" id="date-picker" style="position:absolute;opacity:0;inset:0"
+                    <input type="date" id="date-picker"
+                        style="position:absolute;opacity:0;inset:0;width:100%;height:100%;cursor:pointer"
                         onchange="changeDate(this.value)">
-                    <button class="icon-btn" title="Calendar">
+                    <button class="icon-btn" title="Calendar"
+                        onclick="document.getElementById('date-picker').showPicker()">
                         <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"
                             viewBox="0 0 24 24">
                             <rect x="3" y="4" width="18" height="18" rx="2" />
@@ -479,7 +492,8 @@
                     </button>
                 </div>
                 <button class="icon-btn" title="Refresh" onclick="refreshDashboard()" id="refresh-btn">
-                    <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"
+                        id="refresh-svg">
                         <polyline points="23 4 23 10 17 10" />
                         <polyline points="1 20 1 14 7 14" />
                         <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
@@ -653,10 +667,10 @@
         }
 
         async function refreshDashboard() {
-            const btn = document.getElementById('refresh-btn');
-            if (btn) btn.style.color = '#4d7cf6';
+            const svg = document.getElementById('refresh-svg');
+            if (svg) svg.classList.add('refresh-spin');
             await loadDashboard();
-            setTimeout(() => { if (btn) btn.style.color = '#b0b8d4'; }, 500);
+            setTimeout(() => { if (svg) svg.classList.remove('refresh-spin'); }, 800);
         }
 
         async function loadDashboard() {
