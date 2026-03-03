@@ -5,7 +5,7 @@
 
 // ── Supabase Project Config ──────────────────────────────────
 const SUPABASE_URL = 'https://zfovszmjrtmerasczmsc.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpmb3Zzem1qcnRtZXJhc2N6bXNjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI0NDk5MDIsImV4cCI6MjA4ODAyNTkwMn0.xU_1EKEH7vj5dpxIB_-Vx318Bwy2P8iWIqTvuCi-isU';
+const SUPABASE_ANON_KEY = 'sb_publishable_AIKgg9Q7wtNc9jgNBCWmEA_vGNEZREF';
 // ─────────────────────────────────────────────────────────────
 
 let _sb = null;
