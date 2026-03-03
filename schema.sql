@@ -150,7 +150,7 @@ CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
 
--- ── 9. Seed Food Library (20 common foods) ───────────────────
+-- ── 9. Seed Food Library (Expanded with Indian Cuisine) ───────
 INSERT INTO public.food_items (name, serving_size, kcal, protein_g, carbs_g, fats_g, fiber_g)
 VALUES
   ('Soft Boiled Eggs',           '2 eggs',    140, 12,  1,  10, 0),
@@ -172,5 +172,19 @@ VALUES
   ('Cottage Cheese',             '100g',         98, 11,  3,   4, 0),
   ('Sweet Potato',               '1 medium',   103,  2, 24,   0, 4),
   ('Broccoli',                   '100g',         34,  3,  7,   0, 3),
-  ('Olive Oil',                  '1 tbsp',      119,  0,  0,  14, 0)
+  ('Olive Oil',                  '1 tbsp',      119,  0,  0,  14, 0),
+  ('Chicken Biryani (Standard)', '1 plate',    650, 30, 90,  18, 4),
+  ('Chicken Fried Rice',         '1 bowl',     550, 22, 75,  18, 2),
+  ('Chilly Chicken (Dry)',       '1 portion',  320, 28, 12,  16, 1),
+  ('Butter Chicken',             '200g',       400, 25,  8,  30, 1),
+  ('Paneer Butter Masala',       '200g',       350, 12, 10,  30, 2),
+  ('Masala Dosa',                '1 piece',    350,  6, 55,  12, 3),
+  ('Idli (2) with Sambar',       '250g',       250,  8, 45,   4, 6),
+  ('Dal Tadka',                  '1 bowl',     220, 11, 30,   6, 8),
+  ('Chapati / Roti',             '1 piece',    100,  3, 20,   1, 3),
+  ('Egg Curry',                  '2 eggs',     280, 15,  8,  20, 1),
+  ('Tandoori Chicken',           '1 leg',      220, 25,  2,  12, 0),
+  (' केरल Fish Curry',           '200g',       250, 22,  6,  15, 0),
+  ('Samosa',                     '1 piece',    250,  4, 25,  15, 2),
+  ('Gulab Jamun',                '2 pieces',   320,  4, 50,  12, 0)
 ON CONFLICT DO NOTHING;
