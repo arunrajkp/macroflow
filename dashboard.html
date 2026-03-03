@@ -25,19 +25,34 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 20px 16px
+            padding: 0;
         }
 
         .phone {
-            width: 390px;
-            min-height: 820px;
+            width: 100%;
+            max-width: 430px;
+            height: 100vh;
             background: #f5f7fc;
-            border-radius: 40px;
             box-shadow: 0 30px 80px rgba(0, 0, 0, .18);
             display: flex;
             flex-direction: column;
             overflow: hidden;
             position: relative
+        }
+
+        @media (min-width: 480px) {
+            body {
+                padding: 20px 16px;
+            }
+
+            .phone {
+                height: 820px;
+                border-radius: 40px;
+            }
+
+            .bottom-nav {
+                border-radius: 0 0 40px 40px;
+            }
         }
 
         .header {
@@ -515,15 +530,18 @@
         <div class="content">
             <!-- Calorie ring -->
             <div class="ring-section">
-                <div class="ring-wrap">
+                <div class="ring-wrap" onclick="toggleDisplayMode()" style="cursor:pointer"
+                    title="Tap to toggle Protein/Kcal">
                     <svg width="190" height="190" viewBox="0 0 190 190">
                         <circle cx="95" cy="95" r="80" fill="none" stroke="#f0f2f8" stroke-width="12" />
-                        <circle id="ring-prog" cx="95" cy="95" r="80" fill="none" stroke="#4d7cf6" stroke-width="12"
-                            stroke-linecap="round" stroke-dasharray="502" stroke-dashoffset="502" />
+                        <circle id="ring-prog" cx="95" cy="95" r="80" fill="none" stroke="#6366f1" stroke-width="12"
+                            stroke-linecap="round" stroke-dasharray="0" stroke-dashoffset="0" />
                     </svg>
                     <div class="ring-center">
-                        <div class="num" id="kcal-rem">—</div>
-                        <div class="lbl">kcal remaining</div>
+                        <div class="num" id="ring-val">—</div>
+                        <div class="lbl" id="ring-lbl">Protein Achieved</div>
+                        <div style="font-size:12px; color:#9ba3bf; font-weight:600; margin-top:2px;" id="ring-target">
+                            Target: 150g</div>
                     </div>
                 </div>
                 <div class="ring-legend">
@@ -624,13 +642,12 @@
                 </svg>
                 Checklist
             </a>
-            <a class="nav-item" onclick="signOut()" href="#">
+            <a class="nav-item" href="profile.html">
                 <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-                    <polyline points="16 17 21 12 16 7" />
-                    <line x1="21" y1="12" x2="9" y2="12" />
+                    <circle cx="12" cy="7" r="4" />
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
                 </svg>
-                Logout
+                Profile
             </a>
         </div>
     </div>
@@ -640,6 +657,7 @@
         const MEAL_ICONS = { Breakfast: '☀️', Lunch: '🍴', Dinner: '🌙', Snack: '🍎' };
         let currentUser = null;
         let selectedDate = new Date();
+        let displayMode = 'protein'; // 'protein' or 'kcal'
 
         async function init() {
             try {
@@ -651,12 +669,16 @@
                 if (!user) return;
                 currentUser = user;
 
-                // Load profile for username
                 const { data: profile, error: profErr } = await getProfile(currentUser.id);
                 if (profErr) console.warn('Profile fetch error:', profErr);
                 if (profile) {
                     const name = profile.full_name || profile.username || 'User';
                     document.getElementById('user-greeting').textContent = 'Hi, ' + name + '!';
+
+                    if (profile.daily_kcal_goal) GOALS.kcal = profile.daily_kcal_goal;
+                    if (profile.daily_protein_goal) GOALS.protein = profile.daily_protein_goal;
+                    if (profile.daily_carbs_goal) GOALS.carbs = profile.daily_carbs_goal;
+                    if (profile.daily_fats_goal) GOALS.fats = profile.daily_fats_goal;
                 }
 
                 refreshDashboard();
@@ -694,15 +716,30 @@
                 totalFats += Number(m.total_fats) || 0;
             });
 
-            // Ring
-            const remaining = Math.max(0, GOALS.kcal - totalKcal);
-            document.getElementById('kcal-rem').textContent = Math.round(remaining).toLocaleString();
+            // Update Ring
+            const ringProg = document.getElementById('ring-prog');
+            const ringVal = document.getElementById('ring-val');
+            const ringLbl = document.getElementById('ring-lbl');
+            const ringTarget = document.getElementById('ring-target');
             const circ = 2 * Math.PI * 80;
-            const pct = Math.min(1, totalKcal / GOALS.kcal);
-            const ring = document.getElementById('ring-prog');
-            ring.style.strokeDasharray = circ;
-            ring.style.strokeDashoffset = circ * (1 - pct);
-            ring.style.stroke = pct >= 1 ? '#ef4444' : '#4d7cf6';
+
+            if (displayMode === 'protein') {
+                const pct = Math.min(1, totalProtein / GOALS.protein);
+                ringVal.textContent = Math.round(totalProtein) + 'g';
+                ringLbl.textContent = 'Protein Achieved';
+                ringTarget.textContent = 'Target: ' + GOALS.protein + 'g';
+                ringProg.style.stroke = pct >= 1 ? '#10b981' : '#6366f1';
+                ringProg.style.strokeDasharray = circ;
+                ringProg.style.strokeDashoffset = circ * (1 - pct);
+            } else {
+                const pct = Math.min(1.2, totalKcal / GOALS.kcal);
+                ringVal.textContent = Math.round(totalKcal);
+                ringLbl.textContent = 'Daily Kcal';
+                ringTarget.textContent = 'Goal: ' + GOALS.kcal;
+                ringProg.style.stroke = pct >= 1.1 ? '#ef4444' : (pct >= 0.9 ? '#10b981' : '#8b5cf6');
+                ringProg.style.strokeDasharray = circ;
+                ringProg.style.strokeDashoffset = circ * (1 - Math.min(1, pct));
+            }
 
             // Macros
             document.getElementById('t-protein').innerHTML = Math.round(totalProtein) + '<span>g</span>';
@@ -711,8 +748,8 @@
 
             // Goal bars
             function setBar(id, val, goal, unit) {
-                const pct = Math.min(100, (val / goal) * 100);
-                document.getElementById('gb-' + id).style.width = pct + '%';
+                const pctInner = Math.min(100, (val / goal) * 100);
+                document.getElementById('gb-' + id).style.width = pctInner + '%';
                 document.getElementById('gv-' + id).textContent = Math.round(val) + ' / ' + goal + unit;
             }
             setBar('protein', totalProtein, GOALS.protein, 'g');
@@ -727,19 +764,19 @@
                 return;
             }
             container.innerHTML = meals.map(m => `
-    <div class="meal-item">
-      <div class="meal-icon">${MEAL_ICONS[m.meal_type] || '🍽️'}</div>
-      <div class="meal-info">
-        <div class="meal-name">${m.meal_type}${m.meal_name ? ' – ' + m.meal_name : ''}</div>
-        <div class="meal-foods">${m.food_names || '—'}</div>
-      </div>
-      <div class="meal-right">
-        <div class="meal-kcal">${Math.round(m.total_kcal)} kcal</div>
-        <div class="meal-prot">${Math.round(m.total_protein)}g protein</div>
-      </div>
-      <button class="del-btn" onclick="deleteMealEntry(${m.meal_log_id})" title="Delete meal">🗑</button>
-    </div>
-  `).join('');
+                <div class="meal-item">
+                  <div class="meal-icon">${MEAL_ICONS[m.meal_type] || '🍽️'}</div>
+                  <div class="meal-info">
+                    <div class="meal-name">${m.meal_type}${m.meal_name ? ' – ' + m.meal_name : ''}</div>
+                    <div class="meal-foods">${m.food_names || '—'}</div>
+                  </div>
+                  <div class="meal-right">
+                    <div class="meal-kcal">${Math.round(m.total_kcal)} kcal</div>
+                    <div class="meal-prot">${Math.round(m.total_protein)}g protein</div>
+                  </div>
+                  <button class="del-btn" onclick="deleteMealEntry(${m.meal_log_id})" title="Delete meal">🗑</button>
+                </div>
+            `).join('');
         }
 
         async function deleteMealEntry(id) {
@@ -747,6 +784,11 @@
             const { error } = await deleteMeal(id);
             if (error) { showToast('Delete failed: ' + error.message, 'error'); return; }
             showToast('Meal deleted');
+            loadDashboard();
+        }
+
+        function toggleDisplayMode() {
+            displayMode = displayMode === 'protein' ? 'kcal' : 'protein';
             loadDashboard();
         }
 
@@ -761,7 +803,6 @@
             loadDashboard();
         }
 
-        // Override helper to support custom dates
         function formatDisplayDate(d = new Date()) {
             const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
             const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];

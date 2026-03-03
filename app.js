@@ -58,12 +58,37 @@ async function signOut() {
 
 // ── Profile ──────────────────────────────────────────────────
 async function getProfile(userId) {
-    const { data, error } = await _sb.from('profiles').select('*').eq('id', userId).single();
-    return { data, error };
+    if (!_sb) return { data: null, error: 'No SB' };
+    return await _sb.from('profiles').select('*').eq('id', userId).single();
 }
 
 async function updateProfile(userId, updates) {
-    return _sb.from('profiles').update(updates).eq('id', userId);
+    if (!_sb) return { error: 'No SB' };
+    return await _sb.from('profiles').update(updates).eq('id', userId);
+}
+
+function calculateHealthMetrics(p) {
+    if (!p || !p.weight_kg || !p.height_cm) return null;
+    const hM = p.height_cm / 100;
+    const bmi = p.weight_kg / (hM * hM);
+
+    // Deurenberg formula for Body Fat %: (1.20 × BMI) + (0.23 × Age) - (10.8 × Gender) - 5.4
+    let bf = 0;
+    if (p.age && p.gender) {
+        const gVal = p.gender === 'male' ? 1 : 0;
+        bf = (1.20 * bmi) + (0.23 * p.age) - (10.8 * gVal) - 5.4;
+    }
+
+    // Protein Target: 1.8g - 2.0g per kg of body weight
+    const proteinTarget = Math.round(p.weight_kg * 1.8);
+    const kcalTarget = Math.round(p.weight_kg * 30); // Rough TDEE estimate
+
+    return {
+        bmi: bmi.toFixed(1),
+        bodyFat: bf > 0 ? bf.toFixed(1) : '—',
+        proteinGoal: proteinTarget,
+        kcalGoal: kcalTarget
+    };
 }
 
 // ── Food Items ───────────────────────────────────────────────

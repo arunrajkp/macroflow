@@ -25,19 +25,34 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 20px 16px
+            padding: 0;
         }
 
         .phone {
-            width: 390px;
-            min-height: 820px;
+            width: 100%;
+            max-width: 430px;
+            height: 100vh;
             background: #f5f7fc;
-            border-radius: 40px;
             box-shadow: 0 30px 80px rgba(0, 0, 0, .18);
             display: flex;
             flex-direction: column;
             overflow: hidden;
             position: relative
+        }
+
+        @media (min-width: 480px) {
+            body {
+                padding: 20px 16px;
+            }
+
+            .phone {
+                height: 820px;
+                border-radius: 40px;
+            }
+
+            .bottom-nav {
+                border-radius: 0 0 40px 40px;
+            }
         }
 
         .header {
@@ -61,7 +76,8 @@
 
         .content {
             flex: 1;
-            padding: 20px 24px;
+            padding: 20px 24px 120px;
+            /* Added extra padding-bottom to see last item */
             overflow-y: auto;
         }
 
@@ -72,7 +88,29 @@
             color: #9ba3bf;
             text-transform: uppercase;
             margin-bottom: 12px;
-            margin-top: 20px;
+            margin-top: 24px;
+        }
+
+        /* Swipeable Container */
+        .swipe-container {
+            position: relative;
+            margin-bottom: 12px;
+            border-radius: 20px;
+            overflow: hidden;
+            background: #ef4444;
+            /* Delete background color */
+        }
+
+        .delete-hint {
+            position: absolute;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #fff;
+            font-size: 12px;
+            font-weight: 700;
+            opacity: 0;
+            transition: opacity 0.2s;
         }
 
         .item-card {
@@ -82,10 +120,16 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            margin-bottom: 12px;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
             cursor: pointer;
-            transition: transform 0.1s;
+            transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            z-index: 2;
+            touch-action: pan-y;
+        }
+
+        .item-card.swiped {
+            transform: translateX(80px);
         }
 
         .item-card:active {
@@ -197,13 +241,16 @@
             margin-bottom: 20px;
         }
 
-        .modal-content input {
+        .modal-content input,
+        .modal-content select {
             width: 100%;
             padding: 12px 16px;
             border-radius: 12px;
             border: 1px solid #e0e4f0;
-            margin-bottom: 20px;
+            margin-bottom: 16px;
             font-family: inherit;
+            font-size: 14px;
+            background: #f8fafc;
         }
 
         .modal-btns {
@@ -281,73 +328,79 @@
         </div>
 
         <div class="content">
-            <div class="checklist-cat">Nourishment</div>
-            <div class="item-card" onclick="toggleTask('water_3l')">
-                <div class="item-info">
-                    <div class="item-ico">🍶</div>
-                    <div class="item-text">
-                        <h3>Water intake</h3>
-                        <p>Total of 3 Litres</p>
+            <div id="nourishment-list">
+                <div class="checklist-cat">Nourishment</div>
+                <div class="item-card" onclick="toggleTask('water_3l')">
+                    <div class="item-info">
+                        <div class="item-ico">🍶</div>
+                        <div class="item-text">
+                            <h3>Water intake</h3>
+                            <p>Total of 3 Litres</p>
+                        </div>
                     </div>
+                    <div class="check-pill" id="pill-water_3l">✓</div>
                 </div>
-                <div class="check-pill" id="pill-water_3l">✓</div>
+
+                <div class="item-card" onclick="toggleTask('clean_eating')">
+                    <div class="item-info">
+                        <div class="item-ico">🥗</div>
+                        <div class="item-text">
+                            <h3>Clean Eating</h3>
+                            <p>Whole foods only</p>
+                        </div>
+                    </div>
+                    <div class="check-pill" id="pill-clean_eating">✓</div>
+                </div>
             </div>
 
-            <div class="item-card" onclick="toggleTask('clean_eating')">
-                <div class="item-info">
-                    <div class="item-ico">🥗</div>
-                    <div class="item-text">
-                        <h3>Clean Eating</h3>
-                        <p>Whole foods only</p>
+            <div id="activity-list">
+                <div class="checklist-cat">Activity</div>
+                <div class="item-card" onclick="toggleTask('gym')">
+                    <div class="item-info">
+                        <div class="item-ico">🏋️</div>
+                        <div class="item-text">
+                            <h3>Workout</h3>
+                            <p>Gym or Home Session</p>
+                        </div>
                     </div>
+                    <div class="check-pill" id="pill-gym">✓</div>
                 </div>
-                <div class="check-pill" id="pill-clean_eating">✓</div>
+
+                <div class="item-card" onclick="toggleTask('meditation')">
+                    <div class="item-info">
+                        <div class="item-ico">🧘</div>
+                        <div class="item-text">
+                            <h3>Mindfulness</h3>
+                            <p>10 mins meditation</p>
+                        </div>
+                    </div>
+                    <div class="check-pill" id="pill-meditation">✓</div>
+                </div>
             </div>
 
-            <div class="checklist-cat">Activity</div>
-            <div class="item-card" onclick="toggleTask('gym')">
-                <div class="item-info">
-                    <div class="item-ico">🏋️</div>
-                    <div class="item-text">
-                        <h3>Workout</h3>
-                        <p>Gym or Home Session</p>
+            <div id="recovery-list">
+                <div class="checklist-cat">Recovery</div>
+                <div class="item-card" onclick="toggleTask('sleep_8h')">
+                    <div class="item-info">
+                        <div class="item-ico">😴</div>
+                        <div class="item-text">
+                            <h3>Better Sleep</h3>
+                            <p>Full 8 hours rest</p>
+                        </div>
                     </div>
+                    <div class="check-pill" id="pill-sleep_8h">✓</div>
                 </div>
-                <div class="check-pill" id="pill-gym">✓</div>
-            </div>
 
-            <div class="item-card" onclick="toggleTask('meditation')">
-                <div class="item-info">
-                    <div class="item-ico">🧘</div>
-                    <div class="item-text">
-                        <h3>Mindfulness</h3>
-                        <p>10 mins meditation</p>
+                <div class="item-card" onclick="toggleTask('no_sugar')">
+                    <div class="item-info">
+                        <div class="item-ico">🍬</div>
+                        <div class="item-text">
+                            <h3>No Sugar</h3>
+                            <p>Zero refined sugar</p>
+                        </div>
                     </div>
+                    <div class="check-pill" id="pill-no_sugar">✓</div>
                 </div>
-                <div class="check-pill" id="pill-meditation">✓</div>
-            </div>
-
-            <div class="checklist-cat">Recovery</div>
-            <div class="item-card" onclick="toggleTask('sleep_8h')">
-                <div class="item-info">
-                    <div class="item-ico">😴</div>
-                    <div class="item-text">
-                        <h3>Better Sleep</h3>
-                        <p>Full 8 hours rest</p>
-                    </div>
-                </div>
-                <div class="check-pill" id="pill-sleep_8h">✓</div>
-            </div>
-
-            <div class="item-card" onclick="toggleTask('no_sugar')">
-                <div class="item-info">
-                    <div class="item-ico">🍬</div>
-                    <div class="item-text">
-                        <h3>No Sugar</h3>
-                        <p>Zero refined sugar</p>
-                    </div>
-                </div>
-                <div class="check-pill" id="pill-no_sugar">✓</div>
             </div>
 
             <div id="custom-tasks-container"></div>
@@ -357,8 +410,14 @@
 
         <div id="task-modal" onclick="event.target == this ? hideModal() : null">
             <div class="modal-content">
-                <h2>Add Custom Habit</h2>
-                <input type="text" id="new-task-name" placeholder="e.g. Reading for 30 mins">
+                <h2>Add Habit</h2>
+                <input type="text" id="new-task-name" placeholder="Habit name (e.g. Reading)">
+                <select id="new-task-cat">
+                    <option value="Nourishment">Nourishment</option>
+                    <option value="Activity">Activity</option>
+                    <option value="Recovery">Recovery</option>
+                    <option value="Other">Other</option>
+                </select>
                 <div class="modal-btns">
                     <button class="btn-cancel" onclick="hideModal()">Cancel</button>
                     <button class="btn-save" onclick="addCustomTask()">Create</button>
@@ -393,13 +452,12 @@
                 </svg>
                 Checklist
             </a>
-            <a class="nav-item" onclick="signOut()" href="#">
+            <a class="nav-item" href="profile.html">
                 <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-                    <polyline points="16 17 21 12 16 7" />
-                    <line x1="21" y1="12" x2="9" y2="12" />
+                    <circle cx="12" cy="7" r="4" />
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
                 </svg>
-                Logout
+                Profile
             </a>
         </div>
     </div>
@@ -424,6 +482,7 @@
         }
 
         function renderAll() {
+            // Standard Tasks
             const tasks = ['water_3l', 'sleep_8h', 'gym', 'meditation', 'no_sugar', 'clean_eating'];
             tasks.forEach(task => {
                 const card = document.querySelector(`[onclick="toggleTask('${task}')"]`);
@@ -433,22 +492,98 @@
 
             // Customs
             const container = document.getElementById('custom-tasks-container');
-            const customTasks = todayData.custom_tasks || {}; // Assume JSONB exists or empty
+            const customTasks = todayData.custom_tasks || {};
             container.innerHTML = '';
+
+            // Group customs by category
+            const grouped = {};
             Object.keys(customTasks).forEach(name => {
-                const done = customTasks[name];
-                container.innerHTML += `
-                    <div class="item-card ${done ? 'done' : ''}" onclick="toggleCustom('${name}')">
-                        <div class="item-info">
-                            <div class="item-ico">📝</div>
-                            <div class="item-text">
-                                <h3>${name}</h3>
-                                <p>Custom Habit</p>
-                            </div>
-                        </div>
-                        <div class="check-pill">${done ? '✓' : ''}</div>
-                    </div>`;
+                const taskObj = typeof customTasks[name] === 'object' ? customTasks[name] : { done: customTasks[name], cat: 'Other' };
+                const cat = taskObj.cat || 'Other';
+                if (!grouped[cat]) grouped[cat] = [];
+                grouped[cat].push({ name, ...taskObj });
             });
+
+            Object.keys(grouped).forEach(cat => {
+                container.innerHTML += `<div class="checklist-cat">${cat}</div>`;
+                grouped[cat].forEach(t => {
+                    container.innerHTML += `
+                        <div class="swipe-container">
+                            <span class="delete-hint">Delete</span>
+                            <div class="item-card ${t.done ? 'done' : ''}" 
+                                 onclick="toggleCustom('${t.name}')"
+                                 onmousedown="handleSwipeStart(event)"
+                                 onmousemove="handleSwipeMove(event)"
+                                 onmouseup="handleSwipeEnd(event, '${t.name}')"
+                                 ontouchstart="handleSwipeStart(event)"
+                                 ontouchmove="handleSwipeMove(event)"
+                                 ontouchend="handleSwipeEnd(event, '${t.name}')">
+                                <div class="item-info">
+                                    <div class="item-ico">📝</div>
+                                    <div class="item-text">
+                                        <h3>${t.name}</h3>
+                                        <p>Custom Habit</p>
+                                    </div>
+                                </div>
+                                <div class="check-pill">${t.done ? '✓' : ''}</div>
+                            </div>
+                        </div>`;
+                });
+            });
+        }
+
+        // Swipe logic
+        let startX = 0;
+        let currentX = 0;
+        let activeCard = null;
+
+        function handleSwipeStart(e) {
+            startX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
+            activeCard = e.currentTarget;
+            activeCard.style.transition = 'none';
+        }
+
+        function handleSwipeMove(e) {
+            if (!activeCard) return;
+            currentX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
+            const diff = currentX - startX;
+            if (diff > 0 && diff < 120) {
+                activeCard.style.transform = `translateX(${diff}px)`;
+                const hint = activeCard.parentElement.querySelector('.delete-hint');
+                hint.style.opacity = diff / 100;
+            }
+        }
+
+        async function handleSwipeEnd(e, name) {
+            if (!activeCard) return;
+            const diff = currentX - startX;
+            activeCard.style.transition = 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+
+            if (diff > 80) {
+                // Confirm and Delete
+                if (confirm(`Delete habit "${name}"?`)) {
+                    deleteCustom(name);
+                } else {
+                    activeCard.style.transform = 'translateX(0)';
+                }
+            } else {
+                activeCard.style.transform = 'translateX(0)';
+            }
+
+            const hint = activeCard.parentElement.querySelector('.delete-hint');
+            hint.style.opacity = '0';
+            activeCard = null;
+            startX = 0;
+            currentX = 0;
+        }
+
+        async function deleteCustom(name) {
+            const current = todayData.custom_tasks || {};
+            delete current[name];
+            todayData.custom_tasks = current;
+            renderAll();
+            await updateChecklist(currentUser.id, todayISO(), { custom_tasks: current });
+            showToast('Habit deleted');
         }
 
         async function toggleTask(task) {
@@ -458,8 +593,15 @@
         }
 
         async function toggleCustom(name) {
+            // Prevent toggle if it was a swipe
+            if (Math.abs(currentX - startX) > 10) return;
+
             const current = todayData.custom_tasks || {};
-            current[name] = !current[name];
+            if (typeof current[name] === 'object') {
+                current[name].done = !current[name].done;
+            } else {
+                current[name] = !current[name];
+            }
             todayData.custom_tasks = current;
             renderAll();
             await updateChecklist(currentUser.id, todayISO(), { custom_tasks: current });
@@ -470,14 +612,18 @@
 
         async function addCustomTask() {
             const name = document.getElementById('new-task-name').value.trim();
+            const cat = document.getElementById('new-task-cat').value;
             if (!name) return;
+
             const current = todayData.custom_tasks || {};
-            current[name] = false;
+            current[name] = { done: false, cat: cat };
             todayData.custom_tasks = current;
+
             hideModal();
             document.getElementById('new-task-name').value = '';
             renderAll();
             await updateChecklist(currentUser.id, todayISO(), { custom_tasks: current });
+            showToast('New habit added');
         }
 
         init();

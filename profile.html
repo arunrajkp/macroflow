@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MacroFlow – Profile</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="app.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #f5f7fc;
+            color: #1a1f36;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+            align-items: center;
+        }
+
+        .phone {
+            width: 100%;
+            max-width: 430px;
+            height: 100vh;
+            background: #fff;
+            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+
+        @media (min-width: 480px) {
+            body {
+                padding: 20px 16px;
+            }
+
+            .phone {
+                height: 820px;
+                border-radius: 40px;
+            }
+
+            .bottom-nav {
+                border-radius: 0 0 40px 40px;
+            }
+        }
+
+        .header {
+            padding: 40px 24px 20px;
+            text-align: center;
+            border-bottom: 1px solid #f0f2f8;
+        }
+
+        .avatar-wrap {
+            position: relative;
+            width: 100px;
+            height: 100px;
+            margin: 0 auto 16px;
+        }
+
+        .avatar {
+            width: 100%;
+            height: 100%;
+            background: #e8ecf4;
+            border-radius: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            object-fit: cover;
+        }
+
+        .edit-avatar {
+            position: absolute;
+            bottom: -5px;
+            right: -5px;
+            width: 32px;
+            height: 32px;
+            background: #4d7cf6;
+            color: #fff;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            border: 3px solid #fff;
+            cursor: pointer;
+        }
+
+        .content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px;
+            padding-bottom: 100px;
+        }
+
+        .section-title {
+            font-size: 12px;
+            font-weight: 700;
+            color: #9ba3bf;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-bottom: 16px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: #1a1f36;
+            margin-bottom: 8px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px 16px;
+            font-size: 15px;
+            border: 1.5px solid #e8ecf4;
+            border-radius: 12px;
+            transition: all 0.2s;
+            outline: none;
+        }
+
+        .form-input:focus {
+            border-color: #4d7cf6;
+            background: #f8f9fe;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .metric-card {
+            background: #f8f9fe;
+            padding: 16px;
+            border-radius: 20px;
+            text-align: center;
+        }
+
+        .metric-val {
+            font-size: 20px;
+            font-weight: 800;
+            color: #4d7cf6;
+        }
+
+        .metric-lbl {
+            font-size: 10px;
+            font-weight: 700;
+            color: #9ba3bf;
+            text-transform: uppercase;
+            margin-top: 4px;
+        }
+
+        .save-btn {
+            width: 100%;
+            padding: 16px;
+            background: #4d7cf6;
+            color: #fff;
+            border: none;
+            border-radius: 16px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-top: 10px;
+        }
+
+        .save-btn:active {
+            transform: scale(0.98);
+            opacity: 0.9;
+        }
+
+        .bottom-nav {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 80px;
+            background: #fff;
+            border-top: 1px solid #f0f2f8;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            padding: 0 10px;
+            z-index: 100
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-decoration: none;
+            color: #b0b8d4;
+            font-size: 10px;
+            font-weight: 600;
+            gap: 4px;
+            transition: all .2s;
+            flex: 1
+        }
+
+        .nav-item.active {
+            color: #4d7cf6
+        }
+
+        .nav-item svg {
+            width: 24px;
+            height: 24px
+        }
+
+        select.form-input {
+            appearance: none;
+            background: url('data:image/svg+xml;utf8,<svg fill="%23b0b8d4" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/></svg>') no-repeat right 12px center;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="phone">
+        <div class="header">
+            <div class="avatar-wrap">
+                <div class="avatar" id="avatar-display">👤</div>
+                <div class="edit-avatar" onclick="updateAvatar()">📸</div>
+            </div>
+            <h2 id="display-name">User Name</h2>
+            <p style="font-size: 13px; color: #9ba3bf;" id="display-email">email@example.com</p>
+        </div>
+
+        <div class="content">
+            <div class="section-title">Health Analysis</div>
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <div class="metric-val" id="bmi-val">—</div>
+                    <div class="metric-lbl">BMI</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-val" id="bf-val">—</div>
+                    <div class="metric-lbl">Body Fat %</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-val" id="target-kcal">—</div>
+                    <div class="metric-lbl">Daily Kcal</div>
+                </div>
+                <div class="metric-card" style="background: #eef2ff;">
+                    <div class="metric-val" style="color: #6366f1;" id="target-prot">—</div>
+                    <div class="metric-lbl">Protein Goal</div>
+                </div>
+            </div>
+
+            <div class="section-title">Bio Metrics</div>
+            <div class="form-group">
+                <label class="form-label">Full Name</label>
+                <input type="text" id="full_name" class="form-input" placeholder="Your name">
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                <div class="form-group">
+                    <label class="form-label">Height (cm)</label>
+                    <input type="number" id="height" class="form-input" placeholder="175">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Weight (kg)</label>
+                    <input type="number" id="weight" class="form-input" placeholder="70">
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                <div class="form-group">
+                    <label class="form-label">Age</label>
+                    <input type="number" id="age" class="form-input" placeholder="25">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Gender</label>
+                    <select id="gender" class="form-input">
+                        <option value="male">Male</option>
+                        <option value="female">Female</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Custom Protein Goal (g)</label>
+                <input type="number" id="protein_goal" class="form-input" placeholder="e.g. 150">
+                <p style="font-size: 11px; color: #9ba3bf; margin-top: 4px;">Leave empty to use auto-calculated target.
+                </p>
+            </div>
+
+            <button class="save-btn" onclick="saveProfile()" id="save-btn">Save Changes</button>
+            <button onclick="signOut()"
+                style="width:100%;background:none;border:none;color:#ef4444;font-size:14px;font-weight:600;margin-top:20px;cursor:pointer">Logout
+                Account</button>
+        </div>
+
+        <div class="bottom-nav">
+            <a class="nav-item" href="dashboard.html"><svg fill="none" stroke="currentColor" stroke-width="2"
+                    viewBox="0 0 24 24">
+                    <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
+                </svg>Today</a>
+            <a class="nav-item" href="stats.html"><svg fill="none" stroke="currentColor" stroke-width="2"
+                    viewBox="0 0 24 24">
+                    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+                </svg>Stats</a>
+            <a class="nav-item" href="log-intake.html"><svg fill="none" stroke="currentColor" stroke-width="2"
+                    viewBox="0 0 24 24">
+                    <line x1="12" y1="5" x2="12" y2="19" />
+                    <line x1="5" y1="12" x2="19" y2="12" />
+                </svg>Log</a>
+            <a class="nav-item" href="checklist.html"><svg fill="none" stroke="currentColor" stroke-width="2"
+                    viewBox="0 0 24 24">
+                    <polyline points="9 11 12 14 22 4" />
+                    <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
+                </svg>Checklist</a>
+            <a class="nav-item active" href="profile.html"><svg fill="none" stroke="currentColor" stroke-width="2"
+                    viewBox="0 0 24 24">
+                    <circle cx="12" cy="7" r="4" />
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                </svg>Profile</a>
+        </div>
+    </div>
+
+    <script>
+        let currentUser = null;
+        let profileData = null;
+
+        async function init() {
+            currentUser = await requireAuth();
+            if (!currentUser) return;
+            document.getElementById('display-email').textContent = currentUser.email;
+            loadProfile();
+        }
+
+        async function loadProfile() {
+            const { data, error } = await getProfile(currentUser.id);
+            if (error) { console.error(error); return; }
+            profileData = data;
+
+            document.getElementById('full_name').value = data.full_name || '';
+            document.getElementById('display-name').textContent = data.full_name || data.username || 'User';
+            document.getElementById('height').value = data.height_cm || '';
+            document.getElementById('weight').value = data.weight_kg || '';
+            document.getElementById('age').value = data.age || '';
+            document.getElementById('gender').value = data.gender || 'male';
+            document.getElementById('protein_goal').value = data.daily_protein_goal || '';
+
+            if (data.avatar_url) {
+                document.getElementById('avatar-display').innerHTML = `<img src="${data.avatar_url}" class="avatar">`;
+            }
+
+            updateMetricsDisplay();
+        }
+
+        function updateMetricsDisplay() {
+            const metrics = calculateHealthMetrics({
+                weight_kg: parseFloat(document.getElementById('weight').value),
+                height_cm: parseFloat(document.getElementById('height').value),
+                age: parseInt(document.getElementById('age').value),
+                gender: document.getElementById('gender').value
+            });
+
+            if (metrics) {
+                const customProt = document.getElementById('protein_goal').value;
+                document.getElementById('bmi-val').textContent = metrics.bmi;
+                document.getElementById('bf-val').textContent = metrics.bodyFat + '%';
+                document.getElementById('target-kcal').textContent = metrics.kcalGoal;
+                document.getElementById('target-prot').textContent = (customProt || metrics.proteinGoal) + 'g';
+            }
+        }
+
+        async function saveProfile() {
+            const btn = document.getElementById('save-btn');
+            showLoading(true, btn);
+
+            const updates = {
+                full_name: document.getElementById('full_name').value,
+                height_cm: parseFloat(document.getElementById('height').value),
+                weight_kg: parseFloat(document.getElementById('weight').value),
+                age: parseInt(document.getElementById('age').value),
+                gender: document.getElementById('gender').value
+            };
+
+            // Auto-calculate goals
+            const metrics = calculateHealthMetrics(updates);
+            if (metrics) {
+                updates.daily_kcal_goal = metrics.kcalGoal;
+
+                // Use custom protein if provided, otherwise auto
+                const customProt = document.getElementById('protein_goal').value;
+                updates.daily_protein_goal = customProt ? parseInt(customProt) : metrics.proteinGoal;
+            }
+
+            const { error } = await updateProfile(currentUser.id, updates);
+            showLoading(false, btn);
+
+            if (error) showToast(error.message, 'error');
+            else {
+                showToast('Profile updated!');
+                loadProfile();
+            }
+        }
+
+        async function updateAvatar() {
+            const url = prompt("Enter Image URL for profile picture:");
+            if (url) {
+                const { error } = await updateProfile(currentUser.id, { avatar_url: url });
+                if (!error) loadProfile();
+            }
+        }
+
+        init();
+    </script>
+</body>
+
+</html>

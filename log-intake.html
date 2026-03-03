@@ -25,19 +25,34 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 20px 16px
+            padding: 0;
         }
 
         .phone {
-            width: 390px;
-            min-height: 820px;
+            width: 100%;
+            max-width: 430px;
+            height: 100vh;
             background: #fff;
-            border-radius: 40px;
             box-shadow: 0 30px 80px rgba(0, 0, 0, .18);
             display: flex;
             flex-direction: column;
             overflow: hidden;
             position: relative
+        }
+
+        @media (min-width: 480px) {
+            body {
+                padding: 20px 16px;
+            }
+
+            .phone {
+                height: 820px;
+                border-radius: 40px;
+            }
+
+            .bottom-nav {
+                border-radius: 0 0 40px 40px;
+            }
         }
 
         .top-bar {
@@ -464,13 +479,12 @@
                 </svg>
                 Checklist
             </a>
-            <a class="nav-item" onclick="signOut()" href="#">
+            <a class="nav-item" href="profile.html">
                 <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-                    <polyline points="16 17 21 12 16 7" />
-                    <line x1="21" y1="12" x2="9" y2="12" />
+                    <circle cx="12" cy="7" r="4" />
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
                 </svg>
-                Logout
+                Profile
             </a>
         </div>
     </div>
