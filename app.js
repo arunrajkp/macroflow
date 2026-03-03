@@ -11,31 +11,47 @@ const SUPABASE_ANON_KEY = 'sb_publishable_AIKgg9Q7wtNc9jgNBCWmEA_vGNEZREF';
 let _sb = null;
 try {
     if (typeof supabase !== 'undefined') {
-        const { createClient } = supabase;
-        _sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        _sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+            auth: {
+                persistSession: true,
+                autoRefreshToken: true,
+                detectSessionInUrl: true
+            }
+        });
     } else {
-        console.error('Supabase library not found! Is the CDN reachable?');
+        console.error('Supabase library not found!');
     }
 } catch (e) {
-    console.error('Failed to initialize Supabase:', e);
+    console.error('Core Init Failed:', e);
 }
 
 // ── Auth helpers ─────────────────────────────────────────────
 async function getUser() {
     if (!_sb) return null;
     try {
-        const { data: { user } } = await _sb.auth.getUser();
-        return user;
+        const { data: { session } } = await _sb.auth.getSession();
+        return session ? session.user : null;
     } catch (e) {
-        console.warn('Session check failed:', e);
+        console.warn('Auth check skipped:', e);
         return null;
     }
 }
 
 async function requireAuth() {
-    const user = await getUser();
-    if (!user) { window.location.href = 'index.html'; return null; }
-    return user;
+    try {
+        const user = await getUser();
+        if (!user) {
+            // Check if we're already on index.html to avoid loop
+            if (!window.location.pathname.endsWith('index.html') && window.location.pathname !== '/') {
+                window.location.href = 'index.html';
+            }
+            return null;
+        }
+        return user;
+    } catch (e) {
+        console.error('Auth requirement failed:', e);
+        return null;
+    }
 }
 
 async function signIn(email, password) {
