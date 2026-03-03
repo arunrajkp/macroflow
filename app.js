@@ -9,54 +9,75 @@ const SUPABASE_ANON_KEY = 'sb_publishable_AIKgg9Q7wtNc9jgNBCWmEA_vGNEZREF';
 // ─────────────────────────────────────────────────────────────
 
 let _sb = null;
+const _safeStorage = {
+    getItem: (key) => { try { return window.localStorage.getItem(key); } catch (e) { return null; } },
+    setItem: (key, value) => { try { window.localStorage.setItem(key, value); } catch (e) { } },
+    removeItem: (key) => { try { window.localStorage.removeItem(key); } catch (e) { } },
+};
+
 try {
     if (typeof supabase !== 'undefined') {
         _sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
             auth: {
                 persistSession: true,
                 autoRefreshToken: true,
-                detectSessionInUrl: true
+                detectSessionInUrl: true,
+                storage: _safeStorage,
+                // Safari treats cross-site tracking strictly; we ensure we use 'pkce' for better compatibility
+                flowType: 'pkce'
             }
         });
-    } else {
-        console.error('Supabase library not found!');
     }
 } catch (e) {
-    console.error('Core Init Failed:', e);
+    console.error('Supabase Init Error:', e);
 }
 
 // ── Auth helpers ─────────────────────────────────────────────
 async function getUser() {
     if (!_sb) return null;
     try {
-        const { data: { session } } = await _sb.auth.getSession();
+        // Fast path with timeout: Safari sometimes hangs on getSession if storage is flaky
+        const sessionPromise = _sb.auth.getSession();
+        const timeoutPromise = new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('Session Timeout')), 4000)
+        );
+
+        const { data: { session }, error } = await Promise.race([sessionPromise, timeoutPromise]);
+
+        if (error) {
+            if (error.status === 400 || error.message.includes('refresh_token')) {
+                await _sb.auth.signOut().catch(() => { });
+            }
+            return null;
+        }
         return session ? session.user : null;
     } catch (e) {
-        console.warn('Auth check skipped:', e);
-        return null;
+        console.warn('getUser check skipped:', e.message);
+        return null; // Return null so the app continues to login page instead of hanging
     }
 }
 
 async function requireAuth() {
-    try {
-        const user = await getUser();
-        if (!user) {
-            // Check if we're already on index.html to avoid loop
-            if (!window.location.pathname.endsWith('index.html') && window.location.pathname !== '/') {
-                window.location.href = 'index.html';
-            }
-            return null;
+    const user = await getUser();
+    if (!user) {
+        const path = window.location.pathname;
+        if (!path.endsWith('index.html') && path !== '/' && !path.includes('debug.html')) {
+            window.location.href = 'index.html';
         }
-        return user;
-    } catch (e) {
-        console.error('Auth requirement failed:', e);
         return null;
     }
+    return user;
 }
 
 async function signIn(email, password) {
     if (!_sb) return { error: { message: 'Supabase client not initialized.' } };
-    return _sb.auth.signInWithPassword({ email, password });
+    try {
+        const authPromise = _sb.auth.signInWithPassword({ email, password });
+        const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Login attempt timed out')), 8000));
+        return await Promise.race([authPromise, timeoutPromise]);
+    } catch (e) {
+        return { error: { message: e.message || 'Login failed' } };
+    }
 }
 
 async function signUp(email, password, username, fullName) {
@@ -68,8 +89,24 @@ async function signUp(email, password, username, fullName) {
 }
 
 async function signOut() {
-    if (_sb) await _sb.auth.signOut();
+    if (_sb) await _sb.auth.signOut().catch(() => { });
+    _safeStorage.removeItem('sb-zfovszmjrtmerasczmsc-auth-token'); // Clear token manually for safety
     window.location.href = 'index.html';
+}
+
+/**
+ * Force clear all local auth data - useful for debugging hangs in normal browser mode
+ */
+async function resetLocalAuth() {
+    try {
+        if (_sb) await _sb.auth.signOut().catch(() => { });
+        window.localStorage.clear();
+        window.sessionStorage.clear();
+        alert('Browser cache and local sessions have been cleared. Please try logging in again.');
+        window.location.reload();
+    } catch (e) {
+        console.error('Reset failed:', e);
+    }
 }
 
 // ── Profile ──────────────────────────────────────────────────
