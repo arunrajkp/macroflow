@@ -25,7 +25,7 @@ CREATE TABLE IF NOT EXISTS public.profiles (
 -- ── 2. Food Library ──────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS public.food_items (
   id           BIGSERIAL PRIMARY KEY,
-  name         TEXT NOT NULL,
+  name         TEXT UNIQUE NOT NULL,
   brand        TEXT,
   serving_size TEXT DEFAULT '100g',
   kcal         NUMERIC(8,2) DEFAULT 0,
@@ -175,16 +175,26 @@ VALUES
   ('Olive Oil',                  '1 tbsp',      119,  0,  0,  14, 0),
   ('Chicken Biryani (Standard)', '1 plate',    650, 30, 90,  18, 4),
   ('Chicken Fried Rice',         '1 bowl',     550, 22, 75,  18, 2),
+  ('Veg Fried Rice',             '1 bowl',     450, 10, 80,  12, 4),
+  ('Egg Fried Rice',             '1 bowl',     500, 18, 78,  15, 2),
   ('Chilly Chicken (Dry)',       '1 portion',  320, 28, 12,  16, 1),
+  ('Chilly Chicken (Gravy)',     '1 portion',  380, 25, 22,  20, 1),
+  ('Gobi Manchurian',            '1 portion',  280,  6, 35,  14, 3),
   ('Butter Chicken',             '200g',       400, 25,  8,  30, 1),
   ('Paneer Butter Masala',       '200g',       350, 12, 10,  30, 2),
   ('Masala Dosa',                '1 piece',    350,  6, 55,  12, 3),
   ('Idli (2) with Sambar',       '250g',       250,  8, 45,   4, 6),
   ('Dal Tadka',                  '1 bowl',     220, 11, 30,   6, 8),
   ('Chapati / Roti',             '1 piece',    100,  3, 20,   1, 3),
+  ('Kerala Parotta',             '1 piece',    220,  4, 35,   8, 1),
+  ('Appam (1)',                  '1 piece',     90,  2, 18,   1, 0),
+  ('Egg Roast',                  '1 bowl',     240, 14,  6,  18, 0),
+  ('Beef Fry / Roast',           '150g',       350, 30,  4,  24, 0),
+  ('Mutton Biryani',             '1 plate',    750, 35, 95,  25, 4),
+  ('Prawns Roast',               '150g',       280, 25,  8,  16, 0),
+  ('Fish Curry (Kerala Style)',  '200g',       250, 22,  6,  15, 0),
   ('Egg Curry',                  '2 eggs',     280, 15,  8,  20, 1),
   ('Tandoori Chicken',           '1 leg',      220, 25,  2,  12, 0),
-  (' केरल Fish Curry',           '200g',       250, 22,  6,  15, 0),
   ('Samosa',                     '1 piece',    250,  4, 25,  15, 2),
   ('Gulab Jamun',                '2 pieces',   320,  4, 50,  12, 0)
-ON CONFLICT DO NOTHING;
+ON CONFLICT (name) DO NOTHING;
