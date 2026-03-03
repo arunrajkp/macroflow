@@ -22,9 +22,7 @@ try {
                 persistSession: true,
                 autoRefreshToken: true,
                 detectSessionInUrl: true,
-                storage: _safeStorage,
-                // Safari treats cross-site tracking strictly; we ensure we use 'pkce' for better compatibility
-                flowType: 'pkce'
+                storage: _safeStorage
             }
         });
     }
@@ -36,10 +34,10 @@ try {
 async function getUser() {
     if (!_sb) return null;
     try {
-        // Fast path with timeout: Safari sometimes hangs on getSession if storage is flaky
+        // Safari sometimes hangs on getSession if storage is restricted
         const sessionPromise = _sb.auth.getSession();
         const timeoutPromise = new Promise((_, reject) =>
-            setTimeout(() => reject(new Error('Session Timeout')), 4000)
+            setTimeout(() => reject(new Error('Session Timeout')), 8000)
         );
 
         const { data: { session }, error } = await Promise.race([sessionPromise, timeoutPromise]);
@@ -53,7 +51,7 @@ async function getUser() {
         return session ? session.user : null;
     } catch (e) {
         console.warn('getUser check skipped:', e.message);
-        return null; // Return null so the app continues to login page instead of hanging
+        return null;
     }
 }
 
@@ -72,10 +70,14 @@ async function requireAuth() {
 async function signIn(email, password) {
     if (!_sb) return { error: { message: 'Supabase client not initialized.' } };
     try {
+        // Increase login timeout to 20s for slow mobile networks (Jio, etc.)
         const authPromise = _sb.auth.signInWithPassword({ email, password });
-        const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Login attempt timed out')), 8000));
+        const timeoutPromise = new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('Login attempt timed out after 20 seconds. Check your internet connection.')), 20000)
+        );
         return await Promise.race([authPromise, timeoutPromise]);
     } catch (e) {
+        console.error('Login error:', e);
         return { error: { message: e.message || 'Login failed' } };
     }
 }
