@@ -124,18 +124,23 @@ async function updateProfile(userId, updates) {
 }
 
 async function uploadAvatar(userId, file) {
-    if (!_sb) return { error: 'No SB' };
+    if (!_sb) return { error: { message: 'Supabase client not initialized.' } };
 
     const fileExt = file.name.split('.').pop();
-    const fileName = `${userId}-${Math.random()}.${fileExt}`;
+    const fileName = `${Date.now()}.${fileExt}`;
     const filePath = `${userId}/${fileName}`;
 
     // 1. Upload file to 'avatars' bucket
     const { error: uploadError } = await _sb.storage
         .from('avatars')
-        .upload(filePath, file);
+        .upload(filePath, file, { upsert: true });
 
-    if (uploadError) return { error: uploadError };
+    if (uploadError) {
+        if (uploadError.message.includes('bucket') || uploadError.error === 'Bucket not found') {
+            return { error: { message: 'Bucket not found. Check if "avatars" bucket is created as PUBLIC in your Supabase storage.' } };
+        }
+        return { error: uploadError };
+    }
 
     // 2. Get public URL
     const { data: { publicUrl } } = _sb.storage
