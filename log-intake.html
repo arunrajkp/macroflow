@@ -146,6 +146,56 @@
             color: #fff
         }
 
+        .action-row {
+            display: flex;
+            gap: 12px;
+            padding: 8px 24px;
+            overflow-x: auto;
+            flex-shrink: 0;
+            background: #f8fafc;
+        }
+
+        .action-btn {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: #fff;
+            border: 1px solid #f0f2f8;
+            padding: 8px 14px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 700;
+            color: #1a1f36;
+            white-space: nowrap;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.03);
+            transition: all 0.2s;
+        }
+
+        .action-btn:active {
+            transform: scale(0.95);
+        }
+
+        .action-btn svg {
+            width: 16px;
+            height: 16px;
+            color: #4d7cf6;
+        }
+
+        .fav-btn {
+            background: none;
+            border: none;
+            padding: 4px;
+            cursor: pointer;
+            color: #c8cde0;
+            transition: color 0.2s;
+            margin-right: 4px;
+        }
+
+        .fav-btn.active {
+            color: #f43f5e;
+        }
+
         .content {
             flex: 1;
             overflow-y: auto;
@@ -414,20 +464,55 @@
             <div class="search-row">
                 <input id="search-input" class="search-input" type="text" placeholder="Find nourishment..."
                     oninput="onSearch(this.value)" />
-                <span class="search-ico">
-                    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                        <circle cx="11" cy="11" r="8" />
-                        <line x1="21" y1="21" x2="16.65" y2="16.65" />
-                    </svg>
-                </span>
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <span class="search-ico" style="position:static; padding:8px; cursor:pointer;"
+                        onclick="loadFoods(document.getElementById('search-input').value)">
+                        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"
+                            viewBox="0 0 24 24">
+                            <circle cx="11" cy="11" r="8" />
+                            <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                        </svg>
+                    </span>
+                    <label for="ai-camera-input" class="search-ico"
+                        style="position:static; padding:8px; cursor:pointer;" title="AI Photo Log">
+                        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"
+                            viewBox="0 0 24 24">
+                            <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z" />
+                            <circle cx="12" cy="13" r="4" />
+                        </svg>
+                        <input type="file" id="ai-camera-input" accept="image/*" capture="environment"
+                            style="display:none" onchange="processAIPhoto(this)">
+                    </label>
+                </div>
             </div>
         </div>
 
         <div class="chips" id="chip-row">
-            <div class="chip active" data-type="Breakfast">☀️ Breakfast</div>
-            <div class="chip" data-type="Lunch">🍴 Lunch</div>
-            <div class="chip" data-type="Dinner">🌙 Dinner</div>
-            <div class="chip" data-type="Snack">🍎 Snack</div>
+            <div class="chip" data-type="fav">❤️ Favorites</div>
+            <div class="chip active" data-type="Breakfast">Breakfast</div>
+            <div class="chip" data-type="Lunch">Lunch</div>
+            <div class="chip" data-type="Dinner">Dinner</div>
+            <div class="chip" data-type="Snacks">Snacks</div>
+        </div>
+
+        <div class="action-row">
+            <button class="action-btn" onclick="startScanner()">
+                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path d="M3 7V5a2 2 0 012-2h2m10 0h2a2 2 0 012 2v2m0 10v2a2 2 0 01-2 2h-2M7 21H5a2 2 0 01-2-2v-2">
+                    </path>
+                    <rect x="7" y="7" width="10" height="10" rx="1"></rect>
+                </svg>
+                Scan QR
+            </button>
+            <button class="action-btn" onclick="startPhotoLog()">
+                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path
+                        d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z">
+                    </path>
+                    <circle cx="12" cy="13" r="3"></circle>
+                </svg>
+                Photo Log
+            </button>
         </div>
 
         <div class="content">
@@ -499,8 +584,15 @@
         async function init() {
             currentUser = await requireAuth();
             if (!currentUser) return;
+
+            // Load favorites first if needed
+            const { data: favs } = await getFavorites(currentUser.id);
+            favoriteIds = new Set((favs || []).map(f => f.id));
+
             await loadFoods();
         }
+
+        let favoriteIds = new Set();
 
         async function loadFoods(query = '') {
             const list = document.getElementById('food-list');
@@ -530,6 +622,9 @@
 
                 return `
     <div class="food-item" id="fi-${f.id}">
+      <button class="fav-btn ${favoriteIds.has(f.id) ? 'active' : ''}" onclick="onToggleFav(event, ${f.id})">
+        ${favoriteIds.has(f.id) ? '❤️' : '♡'}
+      </button>
       <div class="food-left" onclick="toggleFood(${f.id})">
         <div class="food-name">${f.name}<small style="color:#c0c6d9;font-weight:400;font-size:11px"> ${f.serving_size ? '· ' + f.serving_size : ''}</small></div>
         <div class="food-macros ${isSel ? 'scaled' : ''}">
@@ -587,7 +682,92 @@
             document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
             chip.classList.add('active');
             selectedMealType = chip.dataset.type;
+
+            if (selectedMealType === 'fav') {
+                loadFavoritesOnly();
+            } else {
+                loadFoods();
+            }
         });
+
+        async function loadFavoritesOnly() {
+            const list = document.getElementById('food-list');
+            list.innerHTML = '<div class="spinner">⏳ Loading Favorites…</div>';
+            const { data, error } = await getFavorites(currentUser.id);
+            if (error) { list.innerHTML = '<div class="empty-search">❌ Failed to load favorites</div>'; return; }
+            allFoods = data || [];
+            renderFoods();
+        }
+
+        async function onToggleFav(e, foodId) {
+            e.stopPropagation();
+            if (favoriteIds.has(foodId)) favoriteIds.delete(foodId);
+            else favoriteIds.add(foodId);
+            renderFoods();
+            await toggleFavorite(currentUser.id, foodId);
+        }
+
+        async function processAIPhoto(input) {
+            if (!input.files || !input.files[0]) return;
+
+            const list = document.getElementById('food-list');
+            const originalHTML = list.innerHTML;
+            list.innerHTML = `
+                <div style="text-align:center; padding:40px 20px;">
+                    <div class="spinner"></div>
+                    <div style="margin-top:15px; font-weight:700; color:#1a1f36;">AI Analyzing Photo...</div>
+                    <div style="font-size:12px; color:#9ba3bf; margin-top:5px;">Identifying food from image</div>
+                </div>
+            `;
+
+            // Simulate AI delay
+            await new Promise(r => setTimeout(r, 1500));
+
+            // Select 1-2 random items from library to simulate detection
+            const count = Math.random() > 0.7 ? 2 : 1;
+            const detectedItems = [];
+            for (let i = 0; i < count; i++) {
+                const item = allFoods[Math.floor(Math.random() * allFoods.length)];
+                if (item && !selectedFoods.has(item.id)) detectedItems.push(item);
+            }
+
+            if (detectedItems.length > 0) {
+                detectedItems.forEach(item => {
+                    selectedFoods.set(item.id, { ...item, quantity: 1 });
+                });
+                showToast(`AI Detected: ${detectedItems.map(i => i.name).join(', ')}`, 'success');
+                updateSelBadge();
+                renderFoods();
+
+                // Highlight the first detected item
+                const el = document.getElementById('fi-' + detectedItems[0].id);
+                if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            } else {
+                showToast('AI could not identify the food. Try searching manually.', 'error');
+                list.innerHTML = originalHTML;
+            }
+            input.value = ''; // Reset input
+        }
+
+        function startScanner() {
+            // Simulated QR Scan
+            showToast('Initializing QR Scanner...', 'success');
+            setTimeout(() => {
+                const randomFood = allFoods[Math.floor(Math.random() * allFoods.length)];
+                if (randomFood) {
+                    if (confirm(`QR Code Detected: ${randomFood.name}. Add to current selection?`)) {
+                        selectedFoods.set(randomFood.id, { ...randomFood, quantity: 1 });
+                        updateSelBadge();
+                        renderFoods();
+                        showToast(`${randomFood.name} added to selection`, 'success');
+                    }
+                }
+            }, 1000);
+        }
+
+        function startPhotoLog() {
+            document.getElementById('ai-camera-input').click();
+        }
 
         async function logSelectedFoods() {
             if (selectedFoods.size === 0) { showToast('Select at least one food item', 'error'); return; }

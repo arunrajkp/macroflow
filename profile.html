@@ -308,6 +308,16 @@
             </div>
 
             <div class="form-group">
+                <label class="form-label">Goal</label>
+                <select id="goal" class="form-input">
+                    <option value="Maintain">Maintain Physique</option>
+                    <option value="Weight Loss">Weight Loss</option>
+                    <option value="Weight Gain">Weight Gain</option>
+                    <option value="Build Muscle">Build Muscle</option>
+                </select>
+            </div>
+
+            <div class="form-group">
                 <label class="form-label">Custom Protein Goal (g)</label>
                 <input type="number" id="protein_goal" class="form-input" placeholder="e.g. 150">
                 <p style="font-size: 11px; color: #9ba3bf; margin-top: 4px;">Leave empty to use auto-calculated target.
@@ -369,6 +379,7 @@
             document.getElementById('weight').value = data.weight_kg || '';
             document.getElementById('age').value = data.age || '';
             document.getElementById('gender').value = data.gender || 'male';
+            document.getElementById('goal').value = data.goal || 'Maintain'; // Added this line
             document.getElementById('protein_goal').value = data.daily_protein_goal || '';
 
             if (data.avatar_url) {
@@ -383,7 +394,8 @@
                 weight_kg: parseFloat(document.getElementById('weight').value),
                 height_cm: parseFloat(document.getElementById('height').value),
                 age: parseInt(document.getElementById('age').value),
-                gender: document.getElementById('gender').value
+                gender: document.getElementById('gender').value,
+                goal: document.getElementById('goal').value // Added this line
             });
 
             if (metrics) {
@@ -404,7 +416,8 @@
                 height_cm: parseFloat(document.getElementById('height').value),
                 weight_kg: parseFloat(document.getElementById('weight').value),
                 age: parseInt(document.getElementById('age').value),
-                gender: document.getElementById('gender').value
+                gender: document.getElementById('gender').value,
+                goal: document.getElementById('goal').value // Added this line
             };
 
             // Auto-calculate goals

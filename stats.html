@@ -244,13 +244,21 @@
 
 <body>
     <div class="phone">
-        <div class="header">
+        <div class="header" style="display:flex; justify-content:space-between; align-items:center;">
             <h1>Activity Stats</h1>
+            <select id="time-range" onchange="loadStats()"
+                style="padding: 6px 10px; border-radius: 12px; border: 1px solid #f0f2f8; font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 600; color: #4d7cf6; outline: none; background: #f8fafc;">
+                <option value="weekly">Weekly</option>
+                <option value="monthly">Monthly</option>
+                <option value="quarterly">Quarterly</option>
+                <option value="half-yearly">Half Yearly</option>
+                <option value="yearly">Yearly</option>
+            </select>
         </div>
 
         <div class="content">
             <div class="card">
-                <div class="card-title">Weekly Calories</div>
+                <div class="card-title">Calories Consumption</div>
                 <div id="kcal-chart" class="chart-placeholder">
                     <!-- Bars injected here -->
                 </div>
@@ -259,79 +267,139 @@
                 </div>
             </div>
 
-            <div class="card">
-                <div class="card-title">7-Day Habit Consistency</div>
-                <div class="stats-grid" id="habit-stats">
-                    <div class="empty-state">Loading habits...</div>
+            <!-- Smart Nutrition Insights -->
+            <div class="card" style="background: #eef2ff; border: none;">
+                <div class="card-title" style="color: #6366f1;">Smart Insights 💡</div>
+                <div id="smart-insights" style="font-size:13px; color: #4b5563; line-height: 1.5; font-weight: 500;">
+                    Analyzing your eating patterns...
                 </div>
             </div>
 
             <div class="card">
-                <div class="card-title">7-Day Macro Spread</div>
-                <div class="stats-grid">
-                    <div class="stat-box">
-                        <div class="stat-val" id="st-prot">0g</div>
-                        <div class="stat-lbl">Protein</div>
-                    </div>
-                    <div class="stat-box">
-                        <div class="stat-val" id="st-carbs">0g</div>
-                        <div class="stat-lbl">Carbs</div>
-                    </div>
-                    <div class="stat-box">
-                        <div class="stat-val" id="st-fats">0g</div>
-                        <div class="stat-lbl">Fats</div>
-                    </div>
-                    <div class="stat-box" style="background:#eef2ff">
-                        <div class="stat-val" id="st-days">0</div>
-                        <div class="stat-lbl">Active Days</div>
-                    </div>
+                <div class="card-title">Calories Consumption</div>
+                <div class="chart-container" id="kcal-chart"
+                    style="height:150px; display:flex; align-items:flex-end; gap:4px; padding-top:10px; overflow:hidden;">
+                    <!-- Line graph SVG will be injected here -->
+                </div>
+                <div
+                    style="display:flex; justify-content:space-between; margin-top:8px; font-size:10px; color:#9ba3bf;">
+                    <span id="chart-start-date">--</span>
+                    <span id="chart-end-date">--</span>
                 </div>
             </div>
 
-            <div class="card">
-                <div class="card-title">Transformations</div>
-                <div id="transformation-gallery"
-                    style="display: flex; overflow-x: auto; gap: 16px; padding-bottom: 8px;">
-                    <div class="empty-state" style="width: 100%">No progress photos yet</div>
+            <!-- Unified Progress Tracking -->
+            <div class="card" style="margin-top:20px">
+                <div class="card-title" style="display:flex; justify-content:space-between; align-items:center;">
+                    Progress Tracking
+                    <select id="progress-metric"
+                        style="background:#f0f2f8; border:none; border-radius:8px; font-size:11px; padding:4px 8px; color:#4d7cf6; font-weight:700;">
+                        <option value="weight_kg">Weight (kg)</option>
+                        <option value="waist_cm">Waist (cm)</option>
+                        <option value="chest_cm">Chest (cm)</option>
+                        <option value="wrist_cm">Wrist (cm)</option>
+                    </select>
                 </div>
+                <div id="unified-progress-chart" style="height:150px; margin-top:10px;">
+                    <!-- Interactive Line/Area Chart SVG -->
+                </div>
+                <div
+                    style="display:flex; justify-content:space-around; margin-top:15px; border-top:1px solid #f8f9fc; padding-top:12px;">
+                    <div style="text-align:center">
+                        <div style="font-size:10px; color:#9ba3bf; margin-bottom:2px;">Current</div>
+                        <div id="prog-curr" style="font-size:14px; font-weight:800; color:#1a1f36">--</div>
+                    </div>
+                    <div style="text-align:center">
+                        <div style="font-size:10px; color:#9ba3bf; margin-bottom:2px;">Target</div>
+                        <div id="prog-target" style="font-size:14px; font-weight:800; color:#4d7cf6">--</div>
+                    </div>
+                    <div style="text-align:center">
+                        <div style="font-size:10px; color:#9ba3bf; margin-bottom:2px;">Progress</div>
+                        <div id="prog-diff" style="font-size:14px; font-weight:800; color:#10b981">--</div>
+                    </div>
+                </div>
+            </div>
+            <div class="stat-box" style="background:#eef2ff">
+                <div class="stat-val" id="st-days">0</div>
+                <div class="stat-lbl">Active Days</div>
             </div>
         </div>
+    </div>
 
-        <div class="bottom-nav">
-            <a class="nav-item" href="dashboard.html">
-                <svg fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
-                </svg>
-                Today
-            </a>
-            <a class="nav-item active" href="stats.html">
-                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
-                </svg>
-                Stats
-            </a>
-            <a class="nav-item" href="log-intake.html">
-                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                    <line x1="12" y1="5" x2="12" y2="19" />
-                    <line x1="5" y1="12" x2="19" y2="12" />
-                </svg>
-                Log
-            </a>
-            <a class="nav-item" href="checklist.html">
-                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                    <polyline points="9 11 12 14 22 4" />
-                    <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
-                </svg>
-                Checklist
-            </a>
-            <a class="nav-item" href="profile.html">
-                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                    <circle cx="12" cy="7" r="4" />
-                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                </svg>
-                Profile
-            </a>
+    <div class="card">
+        <div class="card-title">Transformations</div>
+        <div id="transformation-gallery" style="display: flex; overflow-x: auto; gap: 16px; padding-bottom: 8px;">
+            <div class="empty-state" style="width: 100%">No progress photos yet</div>
         </div>
+    </div>
+
+    <div class="card">
+        <div class="card-title">Progress Tracking (Last 30 Days)</div>
+        <div id="metrics-charts" style="display: flex; flex-direction: column; gap: 20px; padding-top: 10px;">
+            <!-- Progress charts here -->
+            <div class="metric-trend">
+                <div style="display:flex; justify-content:space-between; margin-bottom: 6px;">
+                    <span style="font-size:12px; font-weight:700; color:#1a1f36;">Weight (kg)</span>
+                    <span id="curr-weight" style="font-size:12px; font-weight:800; color:#4d7cf6;">-- kg</span>
+                </div>
+                <div class="chart-placeholder" id="weight-mini-chart"
+                    style="height: 60px; border-bottom: 1.5px solid #f0f2f8; gap: 4px;"></div>
+            </div>
+            <div class="metric-trend">
+                <div style="display:flex; justify-content:space-between; margin-bottom: 6px;">
+                    <span style="font-size:12px; font-weight:700; color:#1a1f36;">Waist (in)</span>
+                    <span id="curr-waist" style="font-size:12px; font-weight:800; color:#10b981;">-- in</span>
+                </div>
+                <div class="chart-placeholder" id="waist-mini-chart"
+                    style="height: 60px; border-bottom: 1.5px solid #f0f2f8; gap: 4px;"></div>
+            </div>
+            <div class="metric-trend">
+                <div style="display:flex; justify-content:space-between; margin-bottom: 6px;">
+                    <span style="font-size:12px; font-weight:700; color:#1a1f36;">Chest (in)</span>
+                    <span id="curr-chest" style="font-size:12px; font-weight:800; color:#f59e0b;">-- in</span>
+                </div>
+                <div class="chart-placeholder" id="chest-mini-chart"
+                    style="height: 60px; border-bottom: 1.5px solid #f0f2f8; gap: 4px;"></div>
+            </div>
+        </div>
+    </div>
+    </div>
+
+    <div class="bottom-nav">
+        <a class="nav-item" href="dashboard.html">
+            <svg fill="currentColor" viewBox="0 0 24 24">
+                <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
+            </svg>
+            Today
+        </a>
+        <a class="nav-item active" href="stats.html">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+            </svg>
+            Stats
+        </a>
+        <a class="nav-item" href="log-intake.html">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <line x1="12" y1="5" x2="12" y2="19" />
+                <line x1="5" y1="12" x2="19" y2="12" />
+            </svg>
+            Log
+        </a>
+        <a class="nav-item" href="checklist.html">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <polyline points="9 11 12 14 22 4" />
+                <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
+            </svg>
+            Checklist
+        </a>
+        <a class="nav-item" href="profile.html">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <circle cx="12" cy="7" r="4" />
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+            </svg>
+            Profile
+        </a>
+    </div>
     </div>
 
     <script>
@@ -340,110 +408,168 @@
         async function init() {
             currentUser = await requireAuth();
             if (!currentUser) return;
+
+            document.getElementById('time-range').addEventListener('change', loadStats);
+            document.getElementById('progress-metric').addEventListener('change', () => {
+                if (window._lastProgressRows) renderUnifiedProgressChart(window._lastProgressRows);
+            });
+
             loadStats();
         }
 
         async function loadStats() {
-            // Get last 7 days of summaries
-            const days = [];
+            const range = document.getElementById('time-range').value;
             const now = new Date();
-            for (let i = 0; i < 7; i++) {
-                const d = new Date();
-                d.setDate(now.getDate() - i);
-                days.push(d.toISOString().split('T')[0]);
-            }
-            days.reverse();
+            let daysToFetch = 7;
+            if (range === 'monthly') daysToFetch = 30;
+            if (range === 'quarterly') daysToFetch = 90;
+            if (range === 'half-yearly') daysToFetch = 180;
+            if (range === 'yearly') daysToFetch = 365;
+
+            const startDate = new Date();
+            startDate.setDate(now.getDate() - (daysToFetch - 1));
+            const startStr = startDate.toISOString().split('T')[0];
+            const endStr = now.toISOString().split('T')[0];
+
+            document.getElementById('chart-start-date').textContent = startDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            document.getElementById('chart-end-date').textContent = now.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 
             const chartContainer = document.getElementById('kcal-chart');
             chartContainer.innerHTML = '<div class="empty-state">Loading stats...</div>';
 
             try {
-                // Fetch all 7 days (simplified: 7 requests in parallel)
-                const results = await Promise.all(days.map(d => getDailySummary(currentUser.id, d)));
-                const { data: habitRows } = await getWeeklyChecklist(currentUser.id, days);
-                const { data: progressRows } = await getRecentProgress(currentUser.id, 7);
+                const { data: summaryRows } = await getSummaryRange(currentUser.id, startStr, endStr);
+                const { data: progressRows } = await getRecentProgress(currentUser.id, 90);
+                window._lastProgressRows = progressRows;
 
-                let totalKcalAll = 0, totalP = 0, totalC = 0, totalF = 0, activeDays = 0;
-                const dailyTotals = [];
-
-                results.forEach((res, idx) => {
-                    let dKcal = 0, dP = 0, dC = 0, dF = 0;
-                    if (res.data && res.data.length > 0) {
-                        activeDays++;
-                        res.data.forEach(m => {
-                            dKcal += Number(m.total_kcal) || 0;
-                            dP += Number(m.total_protein) || 0;
-                            dC += Number(m.total_carbs) || 0;
-                            dF += Number(m.total_fats) || 0;
-                        });
-                    }
-                    dailyTotals.push({ kcal: dKcal, date: days[idx] });
-                    totalKcalAll += dKcal;
-                    totalP += dP;
-                    totalC += dC;
-                    totalF += dF;
+                // 1. Render Calories Chart (Line Graph)
+                const dailyMap = {};
+                summaryRows?.forEach(r => {
+                    const d = r.log_date;
+                    dailyMap[d] = (dailyMap[d] || 0) + (Number(r.total_kcal) || 0);
                 });
 
-                // Render Chart
-                const maxKcal = Math.max(...dailyTotals.map(t => t.kcal), 2000);
-                chartContainer.innerHTML = dailyTotals.map((t, idx) => {
-                    const h = (t.kcal / maxKcal) * 100;
-                    const dayName = new Date(t.date).toLocaleDateString('en-US', { weekday: 'short' });
-                    return `<div class="chart-bar" style="height:${h}%" data-day="${dayName}" title="${t.kcal} kcal"></div>`;
-                }).join('');
+                const chartData = [];
+                for (let i = 0; i < daysToFetch; i++) {
+                    const d = new Date(startDate);
+                    d.setDate(startDate.getDate() + i);
+                    const dStr = d.toISOString().split('T')[0];
+                    chartData.push({ kcal: dailyMap[dStr] || 0, date: dStr });
+                }
 
-                // Render Habits
-                const hContainer = document.getElementById('habit-stats');
-                const taskMapping = {
-                    water_3l: { label: 'Water 3L', val: 0 },
-                    sleep_8h: { label: 'Sleep 8h', val: 0 },
-                    gym: { label: 'Workout', val: 0 },
-                    meditation: { label: 'Mindful', val: 0 },
-                    no_sugar: { label: 'No Sugar', val: 0 },
-                    clean_eating: { label: 'Clean Eat', val: 0 }
-                };
+                const maxKcal = Math.max(...chartData.map(t => t.kcal), 2500);
+                const width = chartContainer.offsetWidth || 340;
+                const height = 150;
 
-                (habitRows || []).forEach(row => {
-                    Object.keys(taskMapping).forEach(task => {
-                        if (row[task]) taskMapping[task].val++;
-                    });
-                });
+                const points = chartData.map((d, i) => {
+                    const x = (i / (daysToFetch - 1)) * width;
+                    const y = height - (d.kcal / maxKcal) * height;
+                    return `${x},${y}`;
+                }).join(' ');
 
-                hContainer.innerHTML = Object.values(taskMapping).map(t => {
-                    const pct = Math.round((t.val / 7) * 100);
-                    return `
-                        <div class="stat-box" style="background:${pct > 50 ? '#f0faf4' : '#fef2f2'}">
-                            <div class="stat-val" style="color:${pct > 50 ? '#2ecc71' : '#ef4444'}">${pct}%</div>
-                            <div class="stat-lbl">${t.label}</div>
-                        </div>`;
-                }).join('');
+                chartContainer.innerHTML = `
+                    <svg width="${width}" height="${height}" style="overflow:visible">
+                        <defs>
+                            <linearGradient id="line-grad" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="0%" stop-color="#4d7cf6" stop-opacity="0.2"/>
+                                <stop offset="100%" stop-color="#4d7cf6" stop-opacity="0"/>
+                            </linearGradient>
+                        </defs>
+                        <path d="M 0 ${height} L ${points} L ${width} ${height} Z" fill="url(#line-grad)" />
+                        <polyline points="${points}" fill="none" stroke="#4d7cf6" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                `;
 
-                document.getElementById('avg-kcal').textContent = Math.round(totalKcalAll / 7);
-                document.getElementById('st-prot').textContent = Math.round(totalP / 7) + 'g';
-                document.getElementById('st-carbs').textContent = Math.round(totalC / 7) + 'g';
-                document.getElementById('st-fats').textContent = Math.round(totalF / 7) + 'g';
+                // 2. Stats & Insights
+                let activeDays = summaryRows ? new Set(summaryRows.map(r => r.log_date)).size : 0;
+                let totalKcal = chartData.reduce((acc, curr) => acc + curr.kcal, 0);
+                let avgKcal = Math.round(totalKcal / (activeDays || 1));
+
+                document.getElementById('avg-kcal').textContent = avgKcal;
                 document.getElementById('st-days').textContent = activeDays;
 
-                // Render Transformations
+                const insightsBox = document.getElementById('smart-insights');
+                if (activeDays === 0) {
+                    insightsBox.innerHTML = "Log your meals for a few days to get smart nutritional insights! 🥗";
+                } else {
+                    let insight = "Your calorie intake is stable. ";
+                    if (avgKcal > 2500) insight = "Your average calorie intake is quite high. Consider more fiber for satiety. ";
+                    if (avgKcal < 1500) insight = "You are eating a very low calorie diet. Ensure you hit your protein targets. ";
+
+                    const totalP = summaryRows?.reduce((acc, r) => acc + (Number(r.total_protein) || 0), 0) || 0;
+                    const avgP = totalP / (activeDays || 1);
+                    if (avgP < 100) insight += "You are eating low protein this period. Add more eggs or chicken!";
+
+                    insightsBox.innerHTML = insight;
+                    document.getElementById('st-prot').textContent = Math.round(avgP) + 'g';
+                }
+
+                // 3. Unified Progress Tracking
+                renderUnifiedProgressChart(progressRows);
+
+                // 4. Transformations
                 const gContainer = document.getElementById('transformation-gallery');
                 const validPhotos = (progressRows || []).filter(r => r.photo_url);
-
                 if (validPhotos.length > 0) {
                     gContainer.innerHTML = validPhotos.map(r => `
                         <div class="photo-card">
-                            <img src="${r.photo_url}" loading="lazy" onerror="this.src='https://via.placeholder.com/124?text=Error'">
+                            <img src="${r.photo_url}" loading="lazy">
                             <div class="photo-date">${new Date(r.log_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</div>
-                            <div class="photo-metric">${r.weight_kg ? r.weight_kg + 'kg' : '--'} / ${r.wrist_cm ? r.wrist_cm + 'cm' : '--'}</div>
+                            <div class="photo-metric">${r.weight_kg ? r.weight_kg + 'kg' : '--'} / ${r.waist_cm ? 'W:' + r.waist_cm : '--'}</div>
                         </div>
                     `).join('');
                 } else {
-                    gContainer.innerHTML = '<div class="empty-state" style="width:100%">Update progress in Checklist to see photos here</div>';
+                    gContainer.innerHTML = '<div class="empty-state" style="width:100%">No photos. Update in Checklist!</div>';
                 }
 
             } catch (err) {
                 chartContainer.innerHTML = '<div class="empty-state">Error loading stats</div>';
                 console.error(err);
             }
+        }
+
+        function renderUnifiedProgressChart(rows) {
+            const metric = document.getElementById('progress-metric').value;
+            const container = document.getElementById('unified-progress-chart');
+            const validRows = (rows || []).filter(r => r[metric]).reverse();
+
+            if (validRows.length === 0) {
+                container.innerHTML = '<div class="empty-state">No progress data logged yet.</div>';
+                return;
+            }
+
+            const latest = validRows[validRows.length - 1][metric];
+            const previous = validRows.length > 1 ? validRows[validRows.length - 2][metric] : latest;
+            const diff = latest - previous;
+
+            document.getElementById('prog-curr').textContent = latest + (metric.includes('kg') ? 'kg' : 'cm');
+            document.getElementById('prog-target').textContent = '--'; // Goals not yet set in DB for measurements
+            document.getElementById('prog-diff').textContent = (diff >= 0 ? '+' : '') + diff.toFixed(1);
+            document.getElementById('prog-diff').style.color = diff <= 0 ? '#10b981' : '#f43f5e';
+
+            const width = container.offsetWidth || 340;
+            const height = 150;
+            const vals = validRows.map(r => Number(r[metric]));
+            const maxV = Math.max(...vals) * 1.05;
+            const minV = Math.min(...vals) * 0.95;
+            const rangeV = maxV - minV || 1;
+
+            const points = validRows.map((r, i) => {
+                const x = (i / (validRows.length - 1 || 1)) * width;
+                const y = height - ((r[metric] - minV) / rangeV) * height;
+                return `${x},${y}`;
+            }).join(' ');
+
+            container.innerHTML = `
+                <svg width="${width}" height="${height}" style="overflow:visible">
+                    <polyline points="${points}" fill="none" stroke="#4d7cf6" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+                    ${validRows.map((r, i) => {
+                const x = (i / (validRows.length - 1 || 1)) * width;
+                const y = height - ((r[metric] - minV) / rangeV) * height;
+                return `<circle cx="${x}" cy="${y}" r="4" fill="#fff" stroke="#4d7cf6" stroke-width="2" />`;
+            }).join('')}
+                </svg>
+            `;
         }
 
         init();

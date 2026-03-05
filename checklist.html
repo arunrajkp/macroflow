@@ -405,9 +405,7 @@
             color: #1a1f36;
             outline: none;
             transition: all 0.2s;
-            -webkit-appearance: none;
-            -moz-appearance: none;
-            appearance: none;
+            box-sizing: border-box;
         }
 
         .metric-input input:focus {
@@ -560,7 +558,7 @@
 
             <div id="progress-tab" class="tab-content">
                 <div class="progress-form">
-                    <div class="photo-picker" onclick="document.getElementById('progress-photo-input').click()">
+                    <div class="photo-picker" onclick="triggerPhotoUpload()">
                         <div id="photo-preview"
                             style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; flex-direction: column;">
                             <span style="font-size: 32px; margin-bottom: 8px;">📷</span>
@@ -723,22 +721,45 @@
             if (error) showToast('Failed to save progress', 'error');
         }
 
+        function triggerPhotoUpload() {
+            const preview = document.getElementById('photo-preview');
+            const hasPhoto = preview.querySelector('img');
+
+            if (hasPhoto) {
+                if (confirm('You already have a progress photo for today. Do you want to retake it?')) {
+                    document.getElementById('progress-photo-input').click();
+                }
+            } else {
+                document.getElementById('progress-photo-input').click();
+            }
+        }
+
         async function handleProgressPhoto(event) {
             const file = event.target.files[0];
-            if (!file) return;
+            if (!file) {
+                // Reset input so the same file can be selected again if needed
+                event.target.value = '';
+                return;
+            }
 
             const preview = document.getElementById('photo-preview');
-            const original = preview.innerHTML;
-            preview.innerHTML = '⏳ Uploading...';
+            const originalContent = preview.innerHTML;
+            preview.innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;">⏳ <span style="font-size:12px;margin-top:4px;">Uploading...</span></div>';
 
-            const { publicUrl, error } = await uploadProgressPhoto(currentUser.id, file);
-            if (error) {
-                showToast('Upload failed', 'error');
-                preview.innerHTML = original;
-            } else {
-                preview.innerHTML = `<img src="${publicUrl}">`;
+            try {
+                const { publicUrl, error } = await uploadProgressPhoto(currentUser.id, file);
+                if (error) throw error;
+
+                preview.innerHTML = `<img src="${publicUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:18px;">`;
                 await updateProgressLog(currentUser.id, todayISO(), { photo_url: publicUrl });
                 showToast('Progress photo saved!');
+            } catch (err) {
+                console.error('Upload Error:', err);
+                showToast('Upload failed', 'error');
+                preview.innerHTML = originalContent;
+            } finally {
+                // Clear input value so onchange fires even for the same file if retried
+                event.target.value = '';
             }
         }
 

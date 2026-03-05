@@ -164,14 +164,28 @@ function calculateHealthMetrics(p) {
     }
 
     // Protein Target: 1.8g - 2.0g per kg of body weight
-    const proteinTarget = Math.round(p.weight_kg * 1.8);
-    const kcalTarget = Math.round(p.weight_kg * 30); // Rough TDEE estimate
+    let proteinTarget = Math.round(p.weight_kg * 1.8);
+    let kcalTarget = Math.round(p.weight_kg * 30); // Rough TDEE estimate
+
+    // Adjust based on goal
+    if (p.goal === 'Weight Loss') {
+        kcalTarget -= 400;
+        proteinTarget = Math.round(p.weight_kg * 2.2); // Higher protein for satiety
+    } else if (p.goal === 'Weight Gain') {
+        kcalTarget += 400;
+    } else if (p.goal === 'Build Muscle') {
+        kcalTarget += 200;
+        proteinTarget = Math.round(p.weight_kg * 2.2);
+    }
 
     return {
         bmi: bmi.toFixed(1),
         bodyFat: bf > 0 ? bf.toFixed(1) : '—',
-        proteinGoal: proteinTarget,
-        kcalGoal: kcalTarget
+        proteinGoal: p.protein_goal || proteinTarget,
+        kcalGoal: p.daily_kcal_goal || kcalTarget,
+        carbsGoal: p.daily_carbs_goal || Math.round((kcalTarget * 0.45) / 4),
+        fatsGoal: p.daily_fats_goal || Math.round((kcalTarget * 0.25) / 9),
+        goal: p.goal || 'Maintain'
     };
 }
 
@@ -212,6 +226,10 @@ async function logMeal({ userId, mealType, mealName, portionSize, logDate, items
             protein_g: item.protein_g || 0,
             carbs_g: item.carbs_g || 0,
             fats_g: item.fats_g || 0,
+            fiber_g: item.fiber_g || 0,
+            sugar_g: item.sugar_g || 0,
+            sodium_mg: item.sodium_mg || 0,
+            cholesterol_mg: item.cholesterol_mg || 0
         }));
         const { error: itemErr } = await _sb.from('meal_food_items').insert(rows);
         if (itemErr) return { error: itemErr };
@@ -225,6 +243,17 @@ async function getDailySummary(userId, date) {
         .select('*')
         .eq('user_id', userId)
         .eq('log_date', date);
+}
+
+async function getSummaryRange(userId, startDate, endDate) {
+    if (!_sb) return { data: [] };
+    return await _sb
+        .from('daily_summary')
+        .select('*')
+        .eq('user_id', userId)
+        .gte('log_date', startDate)
+        .lte('log_date', endDate)
+        .order('log_date', { ascending: true });
 }
 
 async function deleteMeal(mealLogId) {
@@ -325,6 +354,57 @@ async function getRecentProgress(userId, limit = 7) {
         .eq('user_id', userId)
         .order('log_date', { ascending: false })
         .limit(limit);
+}
+
+// ── Favorites ────────────────────────────────────────────────
+async function toggleFavorite(userId, foodId) {
+    if (!_sb) return { error: 'No SB' };
+    const { data: existing } = await _sb.from('favorite_foods').select('*').eq('user_id', userId).eq('food_id', foodId).single();
+    if (existing) {
+        return await _sb.from('favorite_foods').delete().eq('user_id', userId).eq('food_id', foodId);
+    } else {
+        return await _sb.from('favorite_foods').insert({ user_id: userId, food_id: foodId });
+    }
+}
+
+async function getFavorites(userId) {
+    if (!_sb) return { data: [] };
+
+    // Attempt join fetch
+    const { data, error } = await _sb
+        .from('favorite_foods')
+        .select(`
+            food_item_id,
+            food_items:food_item_id (*)
+        `)
+        .eq('user_id', userId);
+
+    if (!error && data) {
+        return { data: data.map(f => f.food_items).filter(Boolean) };
+    }
+
+    // Fallback: Two-step fetch if join fails
+    const { data: favIds, error: idErr } = await _sb
+        .from('favorite_foods')
+        .select('food_item_id')
+        .eq('user_id', userId);
+
+    if (idErr || !favIds || favIds.length === 0) return { data: [], error: idErr };
+
+    const ids = favIds.map(f => f.food_item_id);
+    return await _sb.from('food_items').select('*').in('id', ids);
+}
+
+// ── Meal Suggestion ──────────────────────────────────────────
+async function getMealSuggestions(userId, remaining) {
+    if (!_sb) return { data: [] };
+    // Fetch foods that fit remaining macros (simple logic)
+    let q = _sb.from('food_items').select('*')
+        .lte('kcal', remaining.kcal || 9999)
+        .lte('protein_g', remaining.protein || 999)
+        .order('kcal', { ascending: false })
+        .limit(3);
+    return await q;
 }
 
 // ── Date helpers ─────────────────────────────────────────────
