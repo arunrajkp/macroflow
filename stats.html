@@ -454,7 +454,7 @@
                 }).join(' ');
 
                 chartContainer.innerHTML = `
-                    <svg width="${width}" height="${height}" style="overflow:visible">
+                    <svg viewBox="0 0 ${width} ${height}" width="100%" height="${height}" preserveAspectRatio="none" style="overflow:visible">
                         <defs>
                             <linearGradient id="line-grad" x1="0" y1="0" x2="0" y2="1">
                                 <stop offset="0%" stop-color="#4d7cf6" stop-opacity="0.2"/>
@@ -547,7 +547,7 @@
             }).join(' ');
 
             container.innerHTML = `
-                <svg width="${width}" height="${height}" style="overflow:visible">
+                <svg viewBox="0 0 ${width} ${height}" width="100%" height="${height}" preserveAspectRatio="none" style="overflow:visible">
                     <polyline points="${points}" fill="none" stroke="#4d7cf6" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
                     ${validRows.map((r, i) => {
                 const x = (i / (validRows.length - 1 || 1)) * width;

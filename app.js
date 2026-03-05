@@ -190,16 +190,27 @@ function calculateHealthMetrics(p) {
 }
 
 // ── Food Items ───────────────────────────────────────────────
-async function searchFoods(query = '') {
-    // We order by is_custom (desc) so custom items appear first, then by name
-    let q = _sb.from('food_items').select('*').order('is_custom', { ascending: false }).order('name');
+async function searchFoods(userId = null, query = '') {
+    if (!_sb) return { data: [] };
+    // Order by is_custom (desc) so custom items appear first, then by name
+    let q = _sb.from('food_items').select('*');
+
+    if (userId) {
+        // Show global items (created_by is null) OR items created by this user
+        q = q.or(`created_by.is.null,created_by.eq.${userId}`);
+    } else {
+        // Fallback to just global if no user
+        q = q.is('created_by', null);
+    }
+
     if (query.trim()) {
         const keywords = query.trim().split(/\s+/);
         keywords.forEach(word => {
             q = q.ilike('name', `%${word}%`);
         });
     }
-    return q.limit(50);
+
+    return await q.order('is_custom', { ascending: false }).order('name').limit(50);
 }
 
 async function addCustomFood(userId, food) {
@@ -399,12 +410,22 @@ async function getFavorites(userId) {
 async function getMealSuggestions(userId, remaining) {
     if (!_sb) return { data: [] };
     // Fetch foods that fit remaining macros (simple logic)
+    // We prioritize foods with higher protein if that's the primary need
     let q = _sb.from('food_items').select('*')
-        .lte('kcal', remaining.kcal || 9999)
-        .lte('protein_g', remaining.protein || 999)
-        .order('kcal', { ascending: false })
-        .limit(3);
-    return await q;
+        .lte('kcal', Math.max(200, remaining.kcal || 500))
+        .or(`created_by.is.null,created_by.eq.${userId}`)
+        .order('protein_g', { ascending: false })
+        .limit(6);
+
+    const { data, error } = await q;
+    if (error) return { data: [] };
+
+    // Filter further in memory for better fit
+    return {
+        data: (data || [])
+            .filter(f => f.kcal <= (remaining.kcal || 1000))
+            .slice(0, 3)
+    };
 }
 
 // ── Date helpers ─────────────────────────────────────────────

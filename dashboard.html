@@ -814,11 +814,6 @@
             document.getElementById('t-carbs').innerHTML = Math.round(totalCarbs) + '<span>g</span>';
             document.getElementById('t-fats').innerHTML = Math.round(totalFats) + '<span>g</span>';
 
-            document.getElementById('t-fiber').innerHTML = Math.round(totalFiber) + '<span>g</span>';
-            document.getElementById('t-sugar').innerHTML = Math.round(totalSugar) + '<span>g</span>';
-            document.getElementById('t-sodium').innerHTML = Math.round(totalSodium) + '<span>mg</span>';
-            document.getElementById('t-chol').innerHTML = Math.round(totalChol) + '<span>mg</span>';
-
             // Goal bars
             function setBar(id, val, goal, unit) {
                 const pctInner = Math.min(100, (val / goal) * 100);

@@ -597,7 +597,7 @@
         async function loadFoods(query = '') {
             const list = document.getElementById('food-list');
             list.innerHTML = '<div class="spinner">⏳ Loading…</div>';
-            const { data, error } = await searchFoods(query);
+            const { data, error } = await searchFoods(currentUser.id, query);
             if (error) { list.innerHTML = '<div class="empty-search">❌ Failed to load foods</div>'; return; }
             allFoods = data || [];
             renderFoods();
@@ -806,7 +806,11 @@
                 kcal: f.kcal * f.quantity,
                 protein_g: f.protein_g * f.quantity,
                 carbs_g: f.carbs_g * f.quantity,
-                fats_g: f.fats_g * f.quantity
+                fats_g: f.fats_g * f.quantity,
+                fiber_g: (f.fiber_g || 0) * f.quantity,
+                sugar_g: (f.sugar_g || 0) * f.quantity,
+                sodium_mg: (f.sodium_mg || 0) * f.quantity,
+                cholesterol_mg: (f.cholesterol_mg || 0) * f.quantity
             }));
 
             const { error } = await logMeal({

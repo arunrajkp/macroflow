@@ -436,6 +436,27 @@
                         <input id="ni-fats" class="mini-input" type="number" placeholder="1" min="0" step="0.1" />
                     </div>
                 </div>
+                <!-- New nutritional details -->
+                <div class="row-2">
+                    <div>
+                        <div class="mini-lbl">Fiber (g)</div>
+                        <input id="ni-fiber" class="mini-input" type="number" placeholder="0" min="0" step="0.1" />
+                    </div>
+                    <div>
+                        <div class="mini-lbl">Sugar (g)</div>
+                        <input id="ni-sugar" class="mini-input" type="number" placeholder="0" min="0" step="0.1" />
+                    </div>
+                </div>
+                <div class="row-2">
+                    <div>
+                        <div class="mini-lbl">Sodium (mg)</div>
+                        <input id="ni-sodium" class="mini-input" type="number" placeholder="0" min="0" step="0.1" />
+                    </div>
+                    <div>
+                        <div class="mini-lbl">Cholesterol (mg)</div>
+                        <input id="ni-chol" class="mini-input" type="number" placeholder="0" min="0" step="0.1" />
+                    </div>
+                </div>
                 <div class="mini-lbl">Serving Size</div>
                 <input id="ni-serving" class="mini-input" type="text" placeholder="e.g. 100g"
                     style="margin-bottom:12px" />
@@ -484,7 +505,7 @@
         }
 
         async function loadIngredients() {
-            const { data, error } = await searchFoods();
+            const { data, error } = await searchFoods(currentUser.id);
             allIngredients = data || [];
             renderIngredients();
         }
@@ -559,16 +580,25 @@
             const protein = parseFloat(document.getElementById('ni-prot').value) || 0;
             const carbs = parseFloat(document.getElementById('ni-carbs').value) || 0;
             const fats = parseFloat(document.getElementById('ni-fats').value) || 0;
+            const fiber = parseFloat(document.getElementById('ni-fiber').value) || 0;
+            const sugar = parseFloat(document.getElementById('ni-sugar').value) || 0;
+            const sodium = parseFloat(document.getElementById('ni-sodium').value) || 0;
+            const chol = parseFloat(document.getElementById('ni-chol').value) || 0;
             const serving = document.getElementById('ni-serving').value.trim() || '1 serving';
+
             if (!name) { showToast('Please enter a name', 'error'); return; }
             const btn = document.getElementById('save-ingr-btn');
             showLoading(true, btn);
-            const { data, error } = await addCustomFood(currentUser.id, { name, kcal, protein_g: protein, carbs_g: carbs, fats_g: fats, serving_size: serving });
+            const { data, error } = await addCustomFood(currentUser.id, {
+                name, kcal, protein_g: protein, carbs_g: carbs, fats_g: fats,
+                fiber_g: fiber, sugar_g: sugar, sodium_mg: sodium, cholesterol_mg: chol,
+                serving_size: serving
+            });
             if (error) { showToast('Error: ' + error.message, 'error'); showLoading(false, btn); return; }
             allIngredients.unshift(data);
             selectedItems.set(data.id, 1);
             document.getElementById('ingr-form').classList.remove('open');
-            ['ni-name', 'ni-kcal', 'ni-prot', 'ni-carbs', 'ni-fats', 'ni-serving'].forEach(id => document.getElementById(id).value = '');
+            ['ni-name', 'ni-kcal', 'ni-prot', 'ni-carbs', 'ni-fats', 'ni-fiber', 'ni-sugar', 'ni-sodium', 'ni-chol', 'ni-serving'].forEach(id => document.getElementById(id).value = '');
             showLoading(false, btn);
             renderIngredients();
             showToast('✅ Ingredient added!');
@@ -591,7 +621,11 @@
                     kcal: f.kcal * qty,
                     protein_g: f.protein_g * qty,
                     carbs_g: f.carbs_g * qty,
-                    fats_g: f.fats_g * qty
+                    fats_g: f.fats_g * qty,
+                    fiber_g: (f.fiber_g || 0) * qty,
+                    sugar_g: (f.sugar_g || 0) * qty,
+                    sodium_mg: (f.sodium_mg || 0) * qty,
+                    cholesterol_mg: (f.cholesterol_mg || 0) * qty
                 };
             });
             // If only a custom name was provided with no library items, log as a single item with 0 macros
