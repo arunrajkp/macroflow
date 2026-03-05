@@ -205,6 +205,40 @@
             color: #9ba3bf;
             font-size: 14px;
         }
+
+        /* Transformation Gallery */
+        .photo-card {
+            min-width: 140px;
+            background: #f8fafc;
+            border-radius: 16px;
+            padding: 8px;
+            text-align: center;
+            flex-shrink: 0;
+            border: 1px solid #f0f2f8;
+        }
+
+        .photo-card img {
+            width: 124px;
+            height: 124px;
+            border-radius: 12px;
+            object-fit: cover;
+            margin-bottom: 8px;
+            background: #eee;
+        }
+
+        .photo-date {
+            font-size: 10px;
+            font-weight: 700;
+            color: #1a1f36;
+            text-transform: uppercase;
+        }
+
+        .photo-metric {
+            font-size: 9px;
+            color: #9ba3bf;
+            margin-top: 2px;
+            font-weight: 600;
+        }
     </style>
 </head>
 
@@ -251,6 +285,14 @@
                         <div class="stat-val" id="st-days">0</div>
                         <div class="stat-lbl">Active Days</div>
                     </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">Transformations</div>
+                <div id="transformation-gallery"
+                    style="display: flex; overflow-x: auto; gap: 16px; padding-bottom: 8px;">
+                    <div class="empty-state" style="width: 100%">No progress photos yet</div>
                 </div>
             </div>
         </div>
@@ -319,6 +361,7 @@
                 // Fetch all 7 days (simplified: 7 requests in parallel)
                 const results = await Promise.all(days.map(d => getDailySummary(currentUser.id, d)));
                 const { data: habitRows } = await getWeeklyChecklist(currentUser.id, days);
+                const { data: progressRows } = await getRecentProgress(currentUser.id, 7);
 
                 let totalKcalAll = 0, totalP = 0, totalC = 0, totalF = 0, activeDays = 0;
                 const dailyTotals = [];
@@ -380,6 +423,22 @@
                 document.getElementById('st-carbs').textContent = Math.round(totalC / 7) + 'g';
                 document.getElementById('st-fats').textContent = Math.round(totalF / 7) + 'g';
                 document.getElementById('st-days').textContent = activeDays;
+
+                // Render Transformations
+                const gContainer = document.getElementById('transformation-gallery');
+                const validPhotos = (progressRows || []).filter(r => r.photo_url);
+
+                if (validPhotos.length > 0) {
+                    gContainer.innerHTML = validPhotos.map(r => `
+                        <div class="photo-card">
+                            <img src="${r.photo_url}" loading="lazy" onerror="this.src='https://via.placeholder.com/124?text=Error'">
+                            <div class="photo-date">${new Date(r.log_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</div>
+                            <div class="photo-metric">${r.weight_kg ? r.weight_kg + 'kg' : '--'} / ${r.wrist_cm ? r.wrist_cm + 'cm' : '--'}</div>
+                        </div>
+                    `).join('');
+                } else {
+                    gContainer.innerHTML = '<div class="empty-state" style="width:100%">Update progress in Checklist to see photos here</div>';
+                }
 
             } catch (err) {
                 chartContainer.innerHTML = '<div class="empty-state">Error loading stats</div>';

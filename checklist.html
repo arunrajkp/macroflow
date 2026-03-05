@@ -290,6 +290,139 @@
             color: #fff;
         }
 
+        /* Tabs */
+        .tabs {
+            display: flex;
+            background: #fff;
+            padding: 8px;
+            margin: 16px 24px 4px;
+            /* More space top, less bottom */
+            border-radius: 16px;
+            border: 1px solid #f0f2f8;
+            flex-shrink: 0;
+            /* Don't squash tabs */
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 10px;
+            border-radius: 12px;
+            border: none;
+            background: transparent;
+            color: #9ba3bf;
+            font-family: inherit;
+            font-weight: 700;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .tab-btn.active {
+            background: #4d7cf6;
+            color: #fff;
+            box-shadow: 0 4px 12px rgba(77, 124, 246, 0.2);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Progress Card */
+        .progress-form {
+            background: #fff;
+            border-radius: 24px;
+            padding: 24px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
+        }
+
+        .photo-picker {
+            width: 100%;
+            height: 180px;
+            border-radius: 18px;
+            border: 2px dashed #e0e4f0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #9ba3bf;
+            margin-bottom: 24px;
+            cursor: pointer;
+            overflow: hidden;
+            position: relative;
+            background: #f8fafc;
+            transition: all 0.2s;
+        }
+
+        .photo-picker:active {
+            transform: scale(0.98);
+        }
+
+        .photo-picker img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
+        .metric-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .metric-input {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .metric-input label {
+            font-size: 12px;
+            font-weight: 700;
+            color: #9ba3bf;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .metric-input input {
+            width: 100%;
+            height: 50px;
+            /* Fixed height for perfect alignment */
+            padding: 0 16px;
+            border-radius: 14px;
+            border: 1px solid #e0e4f0;
+            background: #f8fafc;
+            font-family: inherit;
+            font-size: 15px;
+            font-weight: 600;
+            color: #1a1f36;
+            outline: none;
+            transition: all 0.2s;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+        }
+
+        .metric-input input:focus {
+            border-color: #4d7cf6;
+            background: #fff;
+            box-shadow: 0 0 0 4px rgba(77, 124, 246, 0.1);
+        }
+
+        /* Hide number arrows */
+        .metric-input input::-webkit-outer-spin-button,
+        .metric-input input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
         /* Nav */
         .bottom-nav {
             position: absolute;
@@ -336,87 +469,139 @@
 <body>
     <div class="phone">
         <div class="header">
-            <h1>Daily Habits</h1>
+            <h1 id="header-title">Daily Habits</h1>
             <p id="today-disp">Monday, March 3</p>
         </div>
 
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('habits')">Habits</button>
+            <button class="tab-btn" onclick="switchTab('progress')">Progress</button>
+        </div>
+
         <div class="content">
-            <div id="nourishment-list">
-                <div class="checklist-cat">Nourishment</div>
-                <div class="item-card" onclick="toggleTask('water_3l')">
-                    <div class="item-info">
-                        <div class="item-ico">🍶</div>
-                        <div class="item-text">
-                            <h3>Water intake</h3>
-                            <p>Total of 3 Litres</p>
+            <div id="habits-tab" class="tab-content active">
+                <div id="nourishment-list">
+                    <div class="checklist-cat">Nourishment</div>
+                    <div class="item-card" onclick="toggleTask('water_3l')">
+                        <div class="item-info">
+                            <div class="item-ico">🍶</div>
+                            <div class="item-text">
+                                <h3>Water intake</h3>
+                                <p>Total of 3 Litres</p>
+                            </div>
                         </div>
+                        <div class="check-pill" id="pill-water_3l">✓</div>
                     </div>
-                    <div class="check-pill" id="pill-water_3l">✓</div>
+
+                    <div class="item-card" onclick="toggleTask('clean_eating')">
+                        <div class="item-info">
+                            <div class="item-ico">🥗</div>
+                            <div class="item-text">
+                                <h3>Clean Eating</h3>
+                                <p>Whole foods only</p>
+                            </div>
+                        </div>
+                        <div class="check-pill" id="pill-clean_eating">✓</div>
+                    </div>
                 </div>
 
-                <div class="item-card" onclick="toggleTask('clean_eating')">
-                    <div class="item-info">
-                        <div class="item-ico">🥗</div>
-                        <div class="item-text">
-                            <h3>Clean Eating</h3>
-                            <p>Whole foods only</p>
+                <div id="activity-list">
+                    <div class="checklist-cat">Activity</div>
+                    <div class="item-card" onclick="toggleTask('gym')">
+                        <div class="item-info">
+                            <div class="item-ico">🏋️</div>
+                            <div class="item-text">
+                                <h3>Workout</h3>
+                                <p>Gym or Home Session</p>
+                            </div>
                         </div>
+                        <div class="check-pill" id="pill-gym">✓</div>
                     </div>
-                    <div class="check-pill" id="pill-clean_eating">✓</div>
+
+                    <div class="item-card" onclick="toggleTask('meditation')">
+                        <div class="item-info">
+                            <div class="item-ico">🧘</div>
+                            <div class="item-text">
+                                <h3>Mindfulness</h3>
+                                <p>10 mins meditation</p>
+                            </div>
+                        </div>
+                        <div class="check-pill" id="pill-meditation">✓</div>
+                    </div>
                 </div>
+
+                <div id="recovery-list">
+                    <div class="checklist-cat">Recovery</div>
+                    <div class="item-card" onclick="toggleTask('sleep_8h')">
+                        <div class="item-info">
+                            <div class="item-ico">😴</div>
+                            <div class="item-text">
+                                <h3>Better Sleep</h3>
+                                <p>Full 8 hours rest</p>
+                            </div>
+                        </div>
+                        <div class="check-pill" id="pill-sleep_8h">✓</div>
+                    </div>
+
+                    <div class="item-card" onclick="toggleTask('no_sugar')">
+                        <div class="item-info">
+                            <div class="item-ico">🍬</div>
+                            <div class="item-text">
+                                <h3>No Sugar</h3>
+                                <p>Zero refined sugar</p>
+                            </div>
+                        </div>
+                        <div class="check-pill" id="pill-no_sugar">✓</div>
+                    </div>
+                </div>
+
+                <div id="custom-tasks-container"></div>
             </div>
 
-            <div id="activity-list">
-                <div class="checklist-cat">Activity</div>
-                <div class="item-card" onclick="toggleTask('gym')">
-                    <div class="item-info">
-                        <div class="item-ico">🏋️</div>
-                        <div class="item-text">
-                            <h3>Workout</h3>
-                            <p>Gym or Home Session</p>
+            <div id="progress-tab" class="tab-content">
+                <div class="progress-form">
+                    <div class="photo-picker" onclick="document.getElementById('progress-photo-input').click()">
+                        <div id="photo-preview"
+                            style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; flex-direction: column;">
+                            <span style="font-size: 32px; margin-bottom: 8px;">📷</span>
+                            <span style="font-weight: 600;">Take Progress Photo</span>
+                            <span style="font-size: 11px; opacity: 0.7; margin-top: 4px;">Click to upload /
+                                capture</span>
                         </div>
+                        <input type="file" id="progress-photo-input" accept="image/*" hidden capture="environment"
+                            onchange="handleProgressPhoto(event)">
                     </div>
-                    <div class="check-pill" id="pill-gym">✓</div>
-                </div>
 
-                <div class="item-card" onclick="toggleTask('meditation')">
-                    <div class="item-info">
-                        <div class="item-ico">🧘</div>
-                        <div class="item-text">
-                            <h3>Mindfulness</h3>
-                            <p>10 mins meditation</p>
+                    <div class="metric-grid">
+                        <div class="metric-input">
+                            <label>Weight (kg)</label>
+                            <input type="number" id="p-weight" step="0.1" placeholder="--"
+                                onchange="saveProgressMetrics()">
+                        </div>
+                        <div class="metric-input">
+                            <label>Wrist (cm)</label>
+                            <input type="number" id="p-wrist" step="0.1" placeholder="--"
+                                onchange="saveProgressMetrics()">
+                        </div>
+                        <div class="metric-input">
+                            <label>Waist (cm)</label>
+                            <input type="number" id="p-waist" step="0.1" placeholder="--"
+                                onchange="saveProgressMetrics()">
+                        </div>
+                        <div class="metric-input">
+                            <label>Chest (cm)</label>
+                            <input type="number" id="p-chest" step="0.1" placeholder="--"
+                                onchange="saveProgressMetrics()">
                         </div>
                     </div>
-                    <div class="check-pill" id="pill-meditation">✓</div>
-                </div>
-            </div>
 
-            <div id="recovery-list">
-                <div class="checklist-cat">Recovery</div>
-                <div class="item-card" onclick="toggleTask('sleep_8h')">
-                    <div class="item-info">
-                        <div class="item-ico">😴</div>
-                        <div class="item-text">
-                            <h3>Better Sleep</h3>
-                            <p>Full 8 hours rest</p>
-                        </div>
+                    <div class="metric-input">
+                        <label>Notes (Optional)</label>
+                        <input type="text" id="p-notes" placeholder="How do you feel today?"
+                            onchange="saveProgressMetrics()">
                     </div>
-                    <div class="check-pill" id="pill-sleep_8h">✓</div>
-                </div>
-
-                <div class="item-card" onclick="toggleTask('no_sugar')">
-                    <div class="item-info">
-                        <div class="item-ico">🍬</div>
-                        <div class="item-text">
-                            <h3>No Sugar</h3>
-                            <p>Zero refined sugar</p>
-                        </div>
-                    </div>
-                    <div class="check-pill" id="pill-no_sugar">✓</div>
                 </div>
             </div>
-
-            <div id="custom-tasks-container"></div>
         </div>
 
         <button class="fab" onclick="showModal()">+</button>
@@ -478,6 +663,7 @@
     <script>
         let currentUser = null;
         let todayData = null;
+        let progressData = null;
 
         async function init() {
             currentUser = await requireAuth();
@@ -485,6 +671,75 @@
 
             document.getElementById('today-disp').textContent = formatDisplayDate();
             loadChecklist();
+            loadProgress();
+        }
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+
+            const btn = document.querySelector(`[onclick="switchTab('${tabId}')"]`);
+            btn.classList.add('active');
+            document.getElementById(`${tabId}-tab`).classList.add('active');
+
+            const title = document.getElementById('header-title');
+            title.textContent = tabId === 'habits' ? 'Daily Habits' : 'Daily Progress';
+
+            const fab = document.querySelector('.fab');
+            if (tabId === 'habits') fab.style.display = 'flex';
+            else fab.style.display = 'none';
+        }
+
+        async function loadProgress() {
+            const { data, error } = await getProgressLog(currentUser.id, todayISO());
+            if (error) {
+                console.error('Progress Load Error:', error);
+                return;
+            }
+            progressData = data;
+
+            // Fill fields
+            if (data.weight_kg) document.getElementById('p-weight').value = data.weight_kg;
+            if (data.wrist_cm) document.getElementById('p-wrist').value = data.wrist_cm;
+            if (data.waist_cm) document.getElementById('p-waist').value = data.waist_cm;
+            if (data.chest_cm) document.getElementById('p-chest').value = data.chest_cm;
+            if (data.notes) document.getElementById('p-notes').value = data.notes;
+
+            if (data.photo_url) {
+                document.getElementById('photo-preview').innerHTML = `<img src="${data.photo_url}">`;
+            }
+        }
+
+        async function saveProgressMetrics() {
+            const updates = {
+                weight_kg: parseFloat(document.getElementById('p-weight').value) || null,
+                wrist_cm: parseFloat(document.getElementById('p-wrist').value) || null,
+                waist_cm: parseFloat(document.getElementById('p-waist').value) || null,
+                chest_cm: parseFloat(document.getElementById('p-chest').value) || null,
+                notes: document.getElementById('p-notes').value || null
+            };
+
+            const { error } = await updateProgressLog(currentUser.id, todayISO(), updates);
+            if (error) showToast('Failed to save progress', 'error');
+        }
+
+        async function handleProgressPhoto(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const preview = document.getElementById('photo-preview');
+            const original = preview.innerHTML;
+            preview.innerHTML = '⏳ Uploading...';
+
+            const { publicUrl, error } = await uploadProgressPhoto(currentUser.id, file);
+            if (error) {
+                showToast('Upload failed', 'error');
+                preview.innerHTML = original;
+            } else {
+                preview.innerHTML = `<img src="${publicUrl}">`;
+                await updateProgressLog(currentUser.id, todayISO(), { photo_url: publicUrl });
+                showToast('Progress photo saved!');
+            }
         }
 
         async function loadChecklist() {

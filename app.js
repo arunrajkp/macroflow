@@ -177,14 +177,15 @@ function calculateHealthMetrics(p) {
 
 // ── Food Items ───────────────────────────────────────────────
 async function searchFoods(query = '') {
-    let q = _sb.from('food_items').select('*').order('name');
+    // We order by is_custom (desc) so custom items appear first, then by name
+    let q = _sb.from('food_items').select('*').order('is_custom', { ascending: false }).order('name');
     if (query.trim()) {
         const keywords = query.trim().split(/\s+/);
         keywords.forEach(word => {
             q = q.ilike('name', `%${word}%`);
         });
     }
-    return q.limit(30);
+    return q.limit(50);
 }
 
 async function addCustomFood(userId, food) {
@@ -269,6 +270,61 @@ async function getWeeklyChecklist(userId, dates) {
         .select('*')
         .eq('user_id', userId)
         .in('log_date', dates);
+}
+
+// ── Progress Logs ─────────────────────────────────────────────
+async function getProgressLog(userId, date) {
+    if (!_sb) return { error: 'No SB' };
+    const { data, error } = await _sb
+        .from('progress_logs')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('log_date', date)
+        .single();
+
+    if (error && error.code === 'PGRST116') { // Not found
+        const { data: newRow, error: insErr } = await _sb
+            .from('progress_logs')
+            .insert({ user_id: userId, log_date: date })
+            .select().single();
+        return { data: newRow, error: insErr };
+    }
+    return { data, error };
+}
+
+async function updateProgressLog(userId, date, updates) {
+    if (!_sb) return { error: 'No SB' };
+    return await _sb
+        .from('progress_logs')
+        .update(updates)
+        .eq('user_id', userId)
+        .eq('log_date', date);
+}
+
+async function uploadProgressPhoto(userId, file) {
+    if (!_sb) return { error: { message: 'Supabase client not initialized.' } };
+    const fileExt = file.name.split('.').pop();
+    const fileName = `progress-${Date.now()}.${fileExt}`;
+    const filePath = `${userId}/progress/${fileName}`;
+
+    const { error: uploadError } = await _sb.storage
+        .from('avatars')
+        .upload(filePath, file);
+
+    if (uploadError) return { error: uploadError };
+
+    const { data: { publicUrl } } = _sb.storage.from('avatars').getPublicUrl(filePath);
+    return { publicUrl };
+}
+
+async function getRecentProgress(userId, limit = 7) {
+    if (!_sb) return { data: [] };
+    return await _sb
+        .from('progress_logs')
+        .select('*')
+        .eq('user_id', userId)
+        .order('log_date', { ascending: false })
+        .limit(limit);
 }
 
 // ── Date helpers ─────────────────────────────────────────────
