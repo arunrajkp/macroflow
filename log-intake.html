@@ -606,7 +606,11 @@
         function renderFoods() {
             const list = document.getElementById('food-list');
             if (!allFoods.length) {
-                list.innerHTML = '<div class="empty-search">No foods found.<br>Add a custom meal below! 🍽️</div>';
+                if (selectedMealType === 'fav') {
+                    list.innerHTML = '<div class="empty-search">No favorites yet.<br>Tap the Heart icon on any food! ❤️</div>';
+                } else {
+                    list.innerHTML = '<div class="empty-search">No foods found.<br>Add a custom meal below! 🍽️</div>';
+                }
                 return;
             }
             list.innerHTML = allFoods.map(f => {
@@ -701,10 +705,31 @@
 
         async function onToggleFav(e, foodId) {
             e.stopPropagation();
-            if (favoriteIds.has(foodId)) favoriteIds.delete(foodId);
-            else favoriteIds.add(foodId);
-            renderFoods();
-            await toggleFavorite(currentUser.id, foodId);
+            const btn = e.currentTarget;
+            const isAdding = !favoriteIds.has(foodId);
+
+            if (isAdding) {
+                favoriteIds.add(foodId);
+                btn.classList.add('active');
+                btn.innerHTML = '❤️';
+                showToast('Added to favorites', 'success');
+            } else {
+                favoriteIds.delete(foodId);
+                btn.classList.remove('active');
+                btn.innerHTML = '♡';
+                showToast('Removed from favorites', 'success');
+                // If we are in favorites tab, remove it immediately
+                if (selectedMealType === 'fav') {
+                    allFoods = allFoods.filter(f => f.id !== foodId);
+                    renderFoods();
+                }
+            }
+
+            const { error } = await toggleFavorite(currentUser.id, foodId);
+            if (error) {
+                showToast('Error: ' + error.message, 'error');
+                // Revert UI if needed
+            }
         }
 
         async function processAIPhoto(input) {

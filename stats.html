@@ -257,13 +257,19 @@
         </div>
 
         <div class="content">
+            <!-- Main Calorie Chart -->
             <div class="card">
                 <div class="card-title">Calories Consumption</div>
-                <div id="kcal-chart" class="chart-placeholder">
-                    <!-- Bars injected here -->
+                <div class="chart-container" id="kcal-chart"
+                    style="height:150px; display:flex; align-items:flex-end; gap:4px; padding-top:10px; overflow:hidden;">
+                    <!-- Line graph SVG will be injected here -->
                 </div>
-                <div style="margin-top:25px; text-align:center; font-size:12px; color:#1a1f36; font-weight:600">
-                    Average: <span id="avg-kcal">0</span> kcal/day
+                <div
+                    style="display:flex; justify-content:space-between; margin-top:8px; font-size:10px; color:#9ba3bf;">
+                    <span id="chart-start-date">--</span>
+                    <span id="avg-kcal-label" style="font-weight:700; color:#1a1f36;">Avg: <span id="avg-kcal">0</span>
+                        kcal</span>
+                    <span id="chart-end-date">--</span>
                 </div>
             </div>
 
@@ -275,18 +281,7 @@
                 </div>
             </div>
 
-            <div class="card">
-                <div class="card-title">Calories Consumption</div>
-                <div class="chart-container" id="kcal-chart"
-                    style="height:150px; display:flex; align-items:flex-end; gap:4px; padding-top:10px; overflow:hidden;">
-                    <!-- Line graph SVG will be injected here -->
-                </div>
-                <div
-                    style="display:flex; justify-content:space-between; margin-top:8px; font-size:10px; color:#9ba3bf;">
-                    <span id="chart-start-date">--</span>
-                    <span id="chart-end-date">--</span>
-                </div>
-            </div>
+
 
             <!-- Unified Progress Tracking -->
             <div class="card" style="margin-top:20px">
@@ -319,87 +314,78 @@
                     </div>
                 </div>
             </div>
-            <div class="stat-box" style="background:#eef2ff">
-                <div class="stat-val" id="st-days">0</div>
-                <div class="stat-lbl">Active Days</div>
+            <!-- Active Days Stats Small -->
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px; margin-bottom:20px;">
+                <div class="stat-box">
+                    <div class="stat-val" id="st-days">0</div>
+                    <div class="stat-lbl">Active Days</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-val" id="st-prot">--</div>
+                    <div class="stat-lbl">Avg Protein</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">Transformations</div>
+                <div id="transformation-gallery"
+                    style="display: flex; overflow-x: auto; gap: 16px; padding-bottom: 8px;">
+                    <div class="empty-state" style="width: 100%">No progress photos yet</div>
+                </div>
+            </div>
+
+            <!-- Detailed Metrics Trends - Mini Graphs -->
+            <div class="card">
+                <div class="card-title">History (Last 30 Days)</div>
+                <div id="metrics-charts" style="display: flex; flex-direction: column; gap: 20px; padding-top: 10px;">
+                    <div class="metric-trend">
+                        <div style="display:flex; justify-content:space-between; margin-bottom: 6px;">
+                            <span style="font-size:12px; font-weight:700; color:#1a1f36;">WeightTrend</span>
+                            <span id="curr-weight" style="font-size:12px; font-weight:800; color:#4d7cf6;">-- kg</span>
+                        </div>
+                        <div class="chart-placeholder" id="weight-mini-chart"
+                            style="height: 60px; border-bottom: 1.5px solid #f0f2f8; gap: 4px; display:flex; align-items:flex-end;">
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
-    </div>
 
-    <div class="card">
-        <div class="card-title">Transformations</div>
-        <div id="transformation-gallery" style="display: flex; overflow-x: auto; gap: 16px; padding-bottom: 8px;">
-            <div class="empty-state" style="width: 100%">No progress photos yet</div>
+        <div class="bottom-nav">
+            <a class="nav-item" href="dashboard.html">
+                <svg fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
+                </svg>
+                Today
+            </a>
+            <a class="nav-item active" href="stats.html">
+                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+                </svg>
+                Stats
+            </a>
+            <a class="nav-item" href="log-intake.html">
+                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <line x1="12" y1="5" x2="12" y2="19" />
+                    <line x1="5" y1="12" x2="19" y2="12" />
+                </svg>
+                Log
+            </a>
+            <a class="nav-item" href="checklist.html">
+                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <polyline points="9 11 12 14 22 4" />
+                    <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
+                </svg>
+                Checklist
+            </a>
+            <a class="nav-item" href="profile.html">
+                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <circle cx="12" cy="7" r="4" />
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                </svg>
+                Profile
+            </a>
         </div>
-    </div>
-
-    <div class="card">
-        <div class="card-title">Progress Tracking (Last 30 Days)</div>
-        <div id="metrics-charts" style="display: flex; flex-direction: column; gap: 20px; padding-top: 10px;">
-            <!-- Progress charts here -->
-            <div class="metric-trend">
-                <div style="display:flex; justify-content:space-between; margin-bottom: 6px;">
-                    <span style="font-size:12px; font-weight:700; color:#1a1f36;">Weight (kg)</span>
-                    <span id="curr-weight" style="font-size:12px; font-weight:800; color:#4d7cf6;">-- kg</span>
-                </div>
-                <div class="chart-placeholder" id="weight-mini-chart"
-                    style="height: 60px; border-bottom: 1.5px solid #f0f2f8; gap: 4px;"></div>
-            </div>
-            <div class="metric-trend">
-                <div style="display:flex; justify-content:space-between; margin-bottom: 6px;">
-                    <span style="font-size:12px; font-weight:700; color:#1a1f36;">Waist (in)</span>
-                    <span id="curr-waist" style="font-size:12px; font-weight:800; color:#10b981;">-- in</span>
-                </div>
-                <div class="chart-placeholder" id="waist-mini-chart"
-                    style="height: 60px; border-bottom: 1.5px solid #f0f2f8; gap: 4px;"></div>
-            </div>
-            <div class="metric-trend">
-                <div style="display:flex; justify-content:space-between; margin-bottom: 6px;">
-                    <span style="font-size:12px; font-weight:700; color:#1a1f36;">Chest (in)</span>
-                    <span id="curr-chest" style="font-size:12px; font-weight:800; color:#f59e0b;">-- in</span>
-                </div>
-                <div class="chart-placeholder" id="chest-mini-chart"
-                    style="height: 60px; border-bottom: 1.5px solid #f0f2f8; gap: 4px;"></div>
-            </div>
-        </div>
-    </div>
-    </div>
-
-    <div class="bottom-nav">
-        <a class="nav-item" href="dashboard.html">
-            <svg fill="currentColor" viewBox="0 0 24 24">
-                <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
-            </svg>
-            Today
-        </a>
-        <a class="nav-item active" href="stats.html">
-            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
-            </svg>
-            Stats
-        </a>
-        <a class="nav-item" href="log-intake.html">
-            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                <line x1="12" y1="5" x2="12" y2="19" />
-                <line x1="5" y1="12" x2="19" y2="12" />
-            </svg>
-            Log
-        </a>
-        <a class="nav-item" href="checklist.html">
-            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                <polyline points="9 11 12 14 22 4" />
-                <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
-            </svg>
-            Checklist
-        </a>
-        <a class="nav-item" href="profile.html">
-            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                <circle cx="12" cy="7" r="4" />
-                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-            </svg>
-            Profile
-        </a>
-    </div>
     </div>
 
     <script>
