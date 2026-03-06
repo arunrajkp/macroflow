@@ -483,6 +483,22 @@
                     <div class="total-lbl">Calories</div>
                     <div class="total-val" id="dk">0</div>
                 </div>
+                <div class="total-cell">
+                    <div class="total-lbl">Fiber</div>
+                    <div class="total-val" id="dfib">0g</div>
+                </div>
+                <div class="total-cell">
+                    <div class="total-lbl">Sugar</div>
+                    <div class="total-val" id="dsug">0g</div>
+                </div>
+                <div class="total-cell">
+                    <div class="total-lbl">Sodium</div>
+                    <div class="total-val" id="dsod">0mg</div>
+                </div>
+                <div class="total-cell">
+                    <div class="total-lbl">Cholest.</div>
+                    <div class="total-val" id="dchol">0mg</div>
+                </div>
             </div>
         </div>
 
@@ -524,9 +540,10 @@
       <div class="ingr-info">
         <div class="ingr-name">${f.name}</div>
         <div class="ingr-sub">
-          P: ${f.protein_g}g · C: ${f.carbs_g}g · F: ${f.fats_g}g
-          ${f.fiber_g ? ` · Fiber: ${f.fiber_g}g` : ''}
-          ${f.sugar_g ? ` · Sugar: ${f.sugar_g}g` : ''}
+          P: ${f.protein_g}g · C: ${f.carbs_g}g · F: ${f.fats_g}g · Fib: ${f.fiber_g || 0}g
+        </div>
+        <div class="ingr-sub">
+          Sug: ${f.sugar_g || 0}g · Sod: ${f.sodium_mg || 0}mg · Chol: ${f.cholesterol_mg || 0}mg
         </div>
         ${isSel ? `
         <div class="qty-mini" onclick="event.stopPropagation()">
@@ -575,10 +592,11 @@
             document.getElementById('dp').textContent = Math.round(p) + 'g';
             document.getElementById('dc').textContent = Math.round(c) + 'g';
             document.getElementById('df').textContent = Math.round(f) + 'g';
-            document.getElementById('dk').textContent = Math.round(k) + ' kcal';
-
-            // Log for debugging or future UI extension
-            console.log(`Totals -> Fiber: ${fiber}, Sugar: ${sugar}, Sodium: ${sodium}, Chol: ${chol}`);
+            document.getElementById('dk').textContent = Math.round(k);
+            document.getElementById('dfib').textContent = Math.round(fiber) + 'g';
+            document.getElementById('dsug').textContent = Math.round(sugar) + 'g';
+            document.getElementById('dsod').textContent = Math.round(sodium) + 'mg';
+            document.getElementById('dchol').textContent = Math.round(chol) + 'mg';
         }
 
         document.getElementById('toggle-add-form').addEventListener('click', () => {

@@ -287,7 +287,7 @@
             <div class="card" style="margin-top:20px">
                 <div class="card-title" style="display:flex; justify-content:space-between; align-items:center;">
                     Progress Tracking
-                    <select id="progress-metric"
+                    <select id="progress-metric" onchange="renderUnifiedProgressChart(window._lastProgressRows)"
                         style="background:#f0f2f8; border:none; border-radius:8px; font-size:11px; padding:4px 8px; color:#4d7cf6; font-weight:700;">
                         <option value="weight_kg">Weight (kg)</option>
                         <option value="waist_cm">Waist (cm)</option>
@@ -448,8 +448,8 @@
                 const height = 150;
 
                 const points = chartData.map((d, i) => {
-                    const x = (i / (daysToFetch - 1)) * width;
-                    const y = height - (d.kcal / maxKcal) * height;
+                    const x = (i / (Math.max(1, daysToFetch - 1))) * width;
+                    const y = height - (d.kcal / (maxKcal || 1)) * height;
                     return `${x},${y}`;
                 }).join(' ');
 
@@ -541,17 +541,18 @@
             const rangeV = maxV - minV || 1;
 
             const points = validRows.map((r, i) => {
-                const x = (i / (validRows.length - 1 || 1)) * width;
-                const y = height - ((r[metric] - minV) / rangeV) * height;
+                const x = (i / (Math.max(1, validRows.length - 1))) * width;
+                const y = height - ((r[metric] - minV) / (rangeV || 1)) * height;
                 return `${x},${y}`;
             }).join(' ');
 
             container.innerHTML = `
                 <svg viewBox="0 0 ${width} ${height}" width="100%" height="${height}" preserveAspectRatio="none" style="overflow:visible">
                     <polyline points="${points}" fill="none" stroke="#4d7cf6" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+                    ${validRows.length === 1 ? `<line x1="0" y1="${height - ((validRows[0][metric] - minV) / (rangeV || 1)) * height}" x2="${width}" y2="${height - ((validRows[0][metric] - minV) / (rangeV || 1)) * height}" stroke="#4d7cf6" stroke-width="1" stroke-dasharray="4" />` : ''}
                     ${validRows.map((r, i) => {
-                const x = (i / (validRows.length - 1 || 1)) * width;
-                const y = height - ((r[metric] - minV) / rangeV) * height;
+                const x = (i / (Math.max(1, validRows.length - 1))) * width;
+                const y = height - ((r[metric] - minV) / (rangeV || 1)) * height;
                 return `<circle cx="${x}" cy="${y}" r="4" fill="#fff" stroke="#4d7cf6" stroke-width="2" />`;
             }).join('')}
                 </svg>

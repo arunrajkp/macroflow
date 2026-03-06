@@ -210,7 +210,7 @@ async function searchFoods(userId = null, query = '') {
         });
     }
 
-    return await q.order('is_custom', { ascending: false }).order('name').limit(50);
+    return await q.order('is_custom', { ascending: false }).order('name').limit(200);
 }
 
 async function addCustomFood(userId, food) {
