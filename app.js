@@ -385,8 +385,8 @@ async function getFavorites(userId) {
     const { data, error } = await _sb
         .from('favorite_foods')
         .select(`
-            food_item_id,
-            food_items:food_item_id (*)
+            food_id,
+            food_items:food_id (*)
         `)
         .eq('user_id', userId);
 
@@ -397,12 +397,12 @@ async function getFavorites(userId) {
     // Fallback: Two-step fetch if join fails
     const { data: favIds, error: idErr } = await _sb
         .from('favorite_foods')
-        .select('food_item_id')
+        .select('food_id')
         .eq('user_id', userId);
 
     if (idErr || !favIds || favIds.length === 0) return { data: [], error: idErr };
 
-    const ids = favIds.map(f => f.food_item_id);
+    const ids = favIds.map(f => f.food_id);
     return await _sb.from('food_items').select('*').in('id', ids);
 }
 

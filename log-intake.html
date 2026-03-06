@@ -632,7 +632,10 @@
       <div class="food-left" onclick="toggleFood(${f.id})">
         <div class="food-name">${f.name}<small style="color:#c0c6d9;font-weight:400;font-size:11px"> ${f.serving_size ? '· ' + f.serving_size : ''}</small></div>
         <div class="food-macros ${isSel ? 'scaled' : ''}">
-          ${kcal} KCAL <span class="sep">|</span> ${protein}g Protein <span class="sep">|</span> ${carbs}g Carbs <span class="sep">|</span> ${fats}g Fat
+          <div style="margin-bottom:2px">${kcal} KCAL <span class="sep">|</span> ${protein}g P <span class="sep">|</span> ${carbs}g C <span class="sep">|</span> ${fats}g F</div>
+          <div style="font-size:10px; opacity:0.7">
+            Fib: ${(f.fiber_g || 0) * qty}g · Sug: ${(f.sugar_g || 0) * qty}g · Sod: ${(f.sodium_mg || 0) * qty}mg · Chol: ${(f.cholesterol_mg || 0) * qty}mg
+          </div>
         </div>
         ${isSel ? `
         <div class="qty-controls" onclick="event.stopPropagation()">

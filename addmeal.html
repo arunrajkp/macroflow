@@ -523,7 +523,11 @@
       <div class="checkbox ${isSel ? 'chk' : ''}">✓</div>
       <div class="ingr-info">
         <div class="ingr-name">${f.name}</div>
-        <div class="ingr-sub">${f.protein_g}g Protein · ${f.carbs_g}g Carbs · ${f.serving_size || ''}</div>
+        <div class="ingr-sub">
+          P: ${f.protein_g}g · C: ${f.carbs_g}g · F: ${f.fats_g}g
+          ${f.fiber_g ? ` · Fiber: ${f.fiber_g}g` : ''}
+          ${f.sugar_g ? ` · Sugar: ${f.sugar_g}g` : ''}
+        </div>
         ${isSel ? `
         <div class="qty-mini" onclick="event.stopPropagation()">
           <button class="qty-btn-m" onclick="updateQty(${f.id}, -0.5)">-</button>
@@ -554,7 +558,7 @@
         }
 
         function updateTotals() {
-            let p = 0, c = 0, f = 0, k = 0;
+            let p = 0, c = 0, f = 0, k = 0, fiber = 0, sugar = 0, sodium = 0, chol = 0;
             selectedItems.forEach((qty, id) => {
                 const food = allIngredients.find(fi => fi.id === id);
                 if (food) {
@@ -562,12 +566,19 @@
                     c += (Number(food.carbs_g) || 0) * qty;
                     f += (Number(food.fats_g) || 0) * qty;
                     k += (Number(food.kcal) || 0) * qty;
+                    fiber += (Number(food.fiber_g) || 0) * qty;
+                    sugar += (Number(food.sugar_g) || 0) * qty;
+                    sodium += (Number(food.sodium_mg) || 0) * qty;
+                    chol += (Number(food.cholesterol_mg) || 0) * qty;
                 }
             });
             document.getElementById('dp').textContent = Math.round(p) + 'g';
             document.getElementById('dc').textContent = Math.round(c) + 'g';
             document.getElementById('df').textContent = Math.round(f) + 'g';
             document.getElementById('dk').textContent = Math.round(k) + ' kcal';
+
+            // Log for debugging or future UI extension
+            console.log(`Totals -> Fiber: ${fiber}, Sugar: ${sugar}, Sodium: ${sodium}, Chol: ${chol}`);
         }
 
         document.getElementById('toggle-add-form').addEventListener('click', () => {
