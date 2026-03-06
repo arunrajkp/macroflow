@@ -71,6 +71,7 @@ CREATE TABLE IF NOT EXISTS public.meal_food_items (
 );
 
 -- ── 5. Daily Summary View ─────────────────────────────────────
+DROP VIEW IF EXISTS public.daily_summary CASCADE;
 CREATE OR REPLACE VIEW public.daily_summary AS
 SELECT
   ml.user_id,
