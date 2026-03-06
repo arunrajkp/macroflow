@@ -33,6 +33,9 @@ CREATE TABLE IF NOT EXISTS public.food_items (
   carbs_g      NUMERIC(8,2) DEFAULT 0,
   fats_g       NUMERIC(8,2) DEFAULT 0,
   fiber_g      NUMERIC(8,2) DEFAULT 0,
+  sugar_g      NUMERIC(8,2) DEFAULT 0,
+  sodium_mg    NUMERIC(8,2) DEFAULT 0,
+  cholesterol_mg NUMERIC(8,2) DEFAULT 0,
   is_custom    BOOLEAN DEFAULT FALSE,
   created_by   UUID REFERENCES public.profiles(id) ON DELETE SET NULL,
   created_at   TIMESTAMPTZ DEFAULT NOW()
@@ -60,7 +63,11 @@ CREATE TABLE IF NOT EXISTS public.meal_food_items (
   kcal         NUMERIC(8,2) DEFAULT 0,
   protein_g    NUMERIC(8,2) DEFAULT 0,
   carbs_g      NUMERIC(8,2) DEFAULT 0,
-  fats_g       NUMERIC(8,2) DEFAULT 0
+  fats_g       NUMERIC(8,2) DEFAULT 0,
+  fiber_g      NUMERIC(8,2) DEFAULT 0,
+  sugar_g      NUMERIC(8,2) DEFAULT 0,
+  sodium_mg    NUMERIC(8,2) DEFAULT 0,
+  cholesterol_mg NUMERIC(8,2) DEFAULT 0
 );
 
 -- ── 5. Daily Summary View ─────────────────────────────────────
@@ -76,6 +83,10 @@ SELECT
   COALESCE(SUM(mfi.protein_g),0) AS total_protein,
   COALESCE(SUM(mfi.carbs_g),  0) AS total_carbs,
   COALESCE(SUM(mfi.fats_g),   0) AS total_fats,
+  COALESCE(SUM(mfi.fiber_g),  0) AS total_fiber,
+  COALESCE(SUM(mfi.sugar_g),  0) AS total_sugar,
+  COALESCE(SUM(mfi.sodium_mg),0) AS total_sodium,
+  COALESCE(SUM(mfi.cholesterol_mg), 0) AS total_cholesterol,
   STRING_AGG(mfi.food_name, ', ') AS food_names
 FROM public.meal_logs ml
 LEFT JOIN public.meal_food_items mfi ON mfi.meal_log_id = ml.id
@@ -87,7 +98,30 @@ CREATE INDEX IF NOT EXISTS idx_meal_logs_user_date ON public.meal_logs(user_id, 
 CREATE INDEX IF NOT EXISTS idx_meal_logs_date      ON public.meal_logs(log_date);
 CREATE INDEX IF NOT EXISTS idx_meal_food_log       ON public.meal_food_items(meal_log_id);
 
--- ── 7. Row Level Security ─────────────────────────────────────
+-- ── 7. User Favorites & Progress ──────────────────────────────
+CREATE TABLE IF NOT EXISTS public.favorite_foods (
+  id           BIGSERIAL PRIMARY KEY,
+  user_id      UUID REFERENCES public.profiles(id) ON DELETE CASCADE,
+  food_id      BIGINT REFERENCES public.food_items(id) ON DELETE CASCADE,
+  created_at   TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(user_id, food_id)
+);
+
+CREATE TABLE IF NOT EXISTS public.progress_logs (
+  id           BIGSERIAL PRIMARY KEY,
+  user_id      UUID REFERENCES public.profiles(id) ON DELETE CASCADE,
+  log_date     DATE DEFAULT CURRENT_DATE,
+  weight_kg    NUMERIC(5,2),
+  waist_cm     NUMERIC(5,2),
+  chest_cm     NUMERIC(5,2),
+  wrist_cm     NUMERIC(5,2),
+  photo_url    TEXT,
+  notes        TEXT,
+  created_at   TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(user_id, log_date)
+);
+
+-- ── 8. Row Level Security ─────────────────────────────────────
 ALTER TABLE public.profiles        ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.meal_logs       ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.meal_food_items ENABLE ROW LEVEL SECURITY;
@@ -223,3 +257,14 @@ VALUES
   ('Samosa',                     '1 piece',    250,  4, 25,  15, 2),
   ('Gulab Jamun',                '2 pieces',   320,  4, 50,  12, 0)
 ON CONFLICT (name) DO NOTHING;
+
+-- Policies for new tables
+ALTER TABLE public.favorite_foods ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "favorite_foods_select" ON public.favorite_foods FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "favorite_foods_insert" ON public.favorite_foods FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "favorite_foods_delete" ON public.favorite_foods FOR DELETE USING (auth.uid() = user_id);
+
+ALTER TABLE public.progress_logs ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "progress_logs_select" ON public.progress_logs FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "progress_logs_insert" ON public.progress_logs FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "progress_logs_update" ON public.progress_logs FOR UPDATE USING (auth.uid() = user_id);
