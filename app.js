@@ -409,23 +409,54 @@ async function getFavorites(userId) {
 // ── Meal Suggestion ──────────────────────────────────────────
 async function getMealSuggestions(userId, remaining) {
     if (!_sb) return { data: [] };
-    // Fetch foods that fit remaining macros (simple logic)
-    // We prioritize foods with higher protein if that's the primary need
-    let q = _sb.from('food_items').select('*')
-        .lte('kcal', Math.max(200, remaining.kcal || 500))
-        .or(`created_by.is.null,created_by.eq.${userId}`)
-        .order('protein_g', { ascending: false })
-        .limit(6);
 
-    const { data, error } = await q;
+    // Goal: Suggest items that help reach the remaining protein target
+    // We want a good protein-to-calorie ratio if protein is the gap
+
+    let q = _sb.from('food_items').select('*');
+
+    // Privacy: Global or user-created
+    q = q.or(`created_by.is.null,created_by.eq.${userId}`);
+
+    // Constraints: Must fit in remaining calories (with some buffer)
+    const kcalLimit = Math.max(minSuggestedKcal(remaining.kcal), 500);
+    q = q.lte('kcal', kcalLimit);
+
+    // If we need protein, order by protein density (protein per kcal) or protein amount
+    if (remaining.protein > 5) {
+        q = q.order('protein_g', { ascending: false });
+    } else {
+        q = q.order('kcal', { ascending: true });
+    }
+
+    const { data, error } = await q.limit(20);
     if (error) return { data: [] };
 
-    // Filter further in memory for better fit
+    // Smart filtering in memory
+    // We want to find items that "fill the gap" well
+    let suggestions = (data || []).filter(f => {
+        // Don't suggest items that are too "heavy" if kcal is nearly full
+        if (remaining.kcal < 200 && f.kcal > remaining.kcal + 50) return false;
+        return true;
+    });
+
+    // Score items based on how well they fit the "remaining protein"
+    // Ideally, we want items where (remaining.protein / protein_g) is close to 1
+    suggestions.sort((a, b) => {
+        const scoreA = Math.abs(remaining.protein - a.protein_g);
+        const scoreB = Math.abs(remaining.protein - b.protein_g);
+        return scoreA - scoreB;
+    });
+
     return {
-        data: (data || [])
-            .filter(f => f.kcal <= (remaining.kcal || 1000))
-            .slice(0, 3)
+        data: suggestions.slice(0, 4)
     };
+}
+
+function minSuggestedKcal(remainingKcal) {
+    if (remainingKcal > 1000) return 800;
+    if (remainingKcal > 500) return 400;
+    return 200;
 }
 
 // ── Date helpers ─────────────────────────────────────────────

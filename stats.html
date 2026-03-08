@@ -388,6 +388,29 @@
         </div>
     </div>
 
+    <!-- 3D View Modal -->
+    <div id="three-d-modal"
+        style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.9); z-index:2000; align-items:center; justify-content:center; flex-direction:column; padding:20px;">
+        <div style="position:absolute; top:20px; right:20px; color:#fff; font-size:30px; cursor:pointer;"
+            onclick="close3DModal()">&times;</div>
+
+        <div id="three-d-viewer"
+            style="width:100%; max-width:400px; height:500px; position:relative; overflow:hidden; border-radius:24px; background:#1a1f36;">
+            <div id="three-d-slides" style="display:flex; transition:transform 0.4s ease; height:100%;">
+                <!-- Slides injected here -->
+            </div>
+
+            <!-- Indicators -->
+            <div style="position:absolute; bottom:20px; left:50%; transform:translateX(-50%); display:flex; gap:8px;"
+                id="three-d-dots">
+                <!-- Dots -->
+            </div>
+        </div>
+
+        <div style="color:#fff; margin-top:20px; font-weight:700; font-size:16px;" id="three-d-title">Front View</div>
+        <div style="color:#9ba3bf; font-size:12px; margin-top:4px;">Swipe left/right to rotate</div>
+    </div>
+
     <script>
         let currentUser = null;
 
@@ -497,13 +520,20 @@
                 const gContainer = document.getElementById('transformation-gallery');
                 const validPhotos = (progressRows || []).filter(r => r.photo_url);
                 if (validPhotos.length > 0) {
-                    gContainer.innerHTML = validPhotos.map(r => `
-                        <div class="photo-card">
-                            <img src="${r.photo_url}" loading="lazy">
+                    gContainer.innerHTML = validPhotos.map((r, idx) => {
+                        let thumb = '';
+                        try {
+                            const p = JSON.parse(r.photo_url);
+                            thumb = p.front || p.back || p.left || p.right || '';
+                        } catch (e) { thumb = r.photo_url; }
+
+                        return `
+                        <div class="photo-card" onclick='open3DModal(${JSON.stringify(r.photo_url)}, "${r.log_date}")'>
+                            <img src="${thumb}" loading="lazy">
                             <div class="photo-date">${new Date(r.log_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</div>
-                            <div class="photo-metric">${r.weight_kg ? r.weight_kg + 'kg' : '--'} / ${r.waist_cm ? 'W:' + r.waist_cm : '--'}</div>
+                            <div class="photo-metric">${r.weight_kg ? r.weight_kg + 'kg' : '--'}</div>
                         </div>
-                    `).join('');
+                    `}).join('');
                 } else {
                     gContainer.innerHTML = '<div class="empty-state" style="width:100%">No photos. Update in Checklist!</div>';
                 }
@@ -513,6 +543,67 @@
                 console.error(err);
             }
         }
+
+        let current3DIndex = 0;
+        let active3DPhotos = [];
+        const viewOrder = ['front', 'left', 'back', 'right'];
+
+        function open3DModal(photoData, date) {
+            const modal = document.getElementById('three-d-modal');
+            const slides = document.getElementById('three-d-slides');
+            const dots = document.getElementById('three-d-dots');
+
+            let photos = {};
+            try { photos = JSON.parse(photoData); }
+            catch (e) { photos = { front: photoData }; }
+
+            active3DPhotos = viewOrder.filter(v => photos[v]).map(v => ({ view: v, url: photos[v] }));
+
+            slides.innerHTML = active3DPhotos.map(p => `
+                <div style="min-width:100%; height:100%; display:flex; align-items:center; justify-content:center;">
+                    <img src="${p.url}" style="width:100%; height:100%; object-fit:contain;">
+                </div>
+            `).join('');
+
+            dots.innerHTML = active3DPhotos.map((_, i) => `
+                <div style="width:8px; height:8px; border-radius:50%; background: ${i === 0 ? '#4d7cf6' : 'rgba(255,255,255,0.3)'};"></div>
+            `).join('');
+
+            current3DIndex = 0;
+            update3DSlide();
+            modal.style.display = 'flex';
+        }
+
+        function close3DModal() {
+            document.getElementById('three-d-modal').style.display = 'none';
+        }
+
+        function update3DSlide() {
+            const slides = document.getElementById('three-d-slides');
+            slides.style.transform = `translateX(-${current3DIndex * 100}%)`;
+
+            const title = document.getElementById('three-d-title');
+            title.textContent = active3DPhotos.length > 0 ? active3DPhotos[current3DIndex].view.toUpperCase() + ' VIEW' : '';
+
+            const dNodes = document.getElementById('three-d-dots').children;
+            [...dNodes].forEach((n, i) => {
+                n.style.background = i === current3DIndex ? '#4d7cf6' : 'rgba(255,255,255,0.3)';
+            });
+        }
+
+        // Touch swipe support
+        let touchStart = 0;
+        document.getElementById('three-d-viewer').addEventListener('touchstart', e => touchStart = e.touches[0].clientX);
+        document.getElementById('three-d-viewer').addEventListener('touchend', e => {
+            const touchEnd = e.changedTouches[0].clientX;
+            if (touchStart - touchEnd > 50) {
+                current3DIndex = (current3DIndex + 1) % active3DPhotos.length;
+                update3DSlide();
+            } else if (touchEnd - touchStart > 50) {
+                current3DIndex = (current3DIndex - 1 + active3DPhotos.length) % active3DPhotos.length;
+                update3DSlide();
+            }
+        });
 
         function renderUnifiedProgressChart(rows) {
             const metric = document.getElementById('progress-metric').value;

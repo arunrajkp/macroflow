@@ -558,16 +558,41 @@
 
             <div id="progress-tab" class="tab-content">
                 <div class="progress-form">
-                    <div class="photo-picker" onclick="triggerPhotoUpload()">
-                        <div id="photo-preview"
-                            style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; flex-direction: column;">
-                            <span style="font-size: 32px; margin-bottom: 8px;">📷</span>
-                            <span style="font-weight: 600;">Take Progress Photo</span>
-                            <span style="font-size: 11px; opacity: 0.7; margin-top: 4px;">Click to upload /
-                                capture</span>
+                    <div class="photo-views-grid"
+                        style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:24px;">
+                        <div class="photo-picker" onclick="triggerPhotoUpload('front')"
+                            style="height:120px; margin-bottom:0;">
+                            <div id="photo-preview-front"
+                                style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; flex-direction:column;">
+                                <span style="font-size:20px;">📷</span>
+                                <span style="font-size:10px; font-weight:700; margin-top:4px;">FRONT</span>
+                            </div>
                         </div>
-                        <input type="file" id="progress-photo-input" accept="image/*" hidden capture="environment"
-                            onchange="handleProgressPhoto(event)">
+                        <div class="photo-picker" onclick="triggerPhotoUpload('back')"
+                            style="height:120px; margin-bottom:0;">
+                            <div id="photo-preview-back"
+                                style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; flex-direction:column;">
+                                <span style="font-size:20px;">📷</span>
+                                <span style="font-size:10px; font-weight:700; margin-top:4px;">BACK</span>
+                            </div>
+                        </div>
+                        <div class="photo-picker" onclick="triggerPhotoUpload('left')"
+                            style="height:120px; margin-bottom:0;">
+                            <div id="photo-preview-left"
+                                style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; flex-direction:column;">
+                                <span style="font-size:20px;">📷</span>
+                                <span style="font-size:10px; font-weight:700; margin-top:4px;">LEFT</span>
+                            </div>
+                        </div>
+                        <div class="photo-picker" onclick="triggerPhotoUpload('right')"
+                            style="height:120px; margin-bottom:0;">
+                            <div id="photo-preview-right"
+                                style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; flex-direction:column;">
+                                <span style="font-size:20px;">📷</span>
+                                <span style="font-size:10px; font-weight:700; margin-top:4px;">RIGHT</span>
+                            </div>
+                        </div>
+                        <input type="file" id="progress-photo-input" accept="image/*" hidden capture="environment">
                     </div>
 
                     <div class="metric-grid">
@@ -704,7 +729,23 @@
             if (data.notes) document.getElementById('p-notes').value = data.notes;
 
             if (data.photo_url) {
-                document.getElementById('photo-preview').innerHTML = `<img src="${data.photo_url}">`;
+                // Try to parse JSON for multiple photos
+                try {
+                    const photos = JSON.parse(data.photo_url);
+                    if (typeof photos === 'object') {
+                        ['front', 'back', 'left', 'right'].forEach(view => {
+                            if (photos[view]) {
+                                document.getElementById(`photo-preview-${view}`).innerHTML = `<img src="${photos[view]}" style="width:100%;height:100%;object-fit:cover;border-radius:18px;">`;
+                            }
+                        });
+                    } else {
+                        // Legacy single photo
+                        document.getElementById('photo-preview-front').innerHTML = `<img src="${data.photo_url}" style="width:100%;height:100%;object-fit:cover;border-radius:18px;">`;
+                    }
+                } catch (e) {
+                    // Not JSON, assume legacy single photo
+                    document.getElementById('photo-preview-front').innerHTML = `<img src="${data.photo_url}" style="width:100%;height:100%;object-fit:cover;border-radius:18px;">`;
+                }
             }
         }
 
@@ -721,44 +762,58 @@
             if (error) showToast('Failed to save progress', 'error');
         }
 
-        function triggerPhotoUpload() {
-            const preview = document.getElementById('photo-preview');
+        let currentUploadingView = null;
+        function triggerPhotoUpload(view) {
+            currentUploadingView = view;
+            const preview = document.getElementById(`photo-preview-${view}`);
             const hasPhoto = preview.querySelector('img');
 
+            const fileInput = document.getElementById('progress-photo-input');
+            fileInput.onchange = (e) => handleProgressPhoto(e, view);
+
             if (hasPhoto) {
-                if (confirm('You already have a progress photo for today. Do you want to retake it?')) {
-                    document.getElementById('progress-photo-input').click();
+                if (confirm(`You already have a ${view} photo for today. Retake it?`)) {
+                    fileInput.click();
                 }
             } else {
-                document.getElementById('progress-photo-input').click();
+                fileInput.click();
             }
         }
 
-        async function handleProgressPhoto(event) {
+        async function handleProgressPhoto(event, view) {
             const file = event.target.files[0];
-            if (!file) {
-                // Reset input so the same file can be selected again if needed
-                event.target.value = '';
-                return;
-            }
+            if (!file) return;
 
-            const preview = document.getElementById('photo-preview');
+            const preview = document.getElementById(`photo-preview-${view}`);
             const originalContent = preview.innerHTML;
-            preview.innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;">⏳ <span style="font-size:12px;margin-top:4px;">Uploading...</span></div>';
+            preview.innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;">⏳ <span style="font-size:10px;margin-top:4px;">...</span></div>';
 
             try {
                 const { publicUrl, error } = await uploadProgressPhoto(currentUser.id, file);
                 if (error) throw error;
 
+                // Update UI
                 preview.innerHTML = `<img src="${publicUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:18px;">`;
-                await updateProgressLog(currentUser.id, todayISO(), { photo_url: publicUrl });
-                showToast('Progress photo saved!');
+
+                // Update Database (fetch existing then merge)
+                const { data: currentLog } = await getProgressLog(currentUser.id, todayISO());
+                let photos = {};
+                try {
+                    photos = JSON.parse(currentLog.photo_url || '{}');
+                    if (typeof photos !== 'object') photos = { front: currentLog.photo_url };
+                } catch (e) {
+                    photos = { front: currentLog.photo_url };
+                }
+
+                photos[view] = publicUrl;
+                await updateProgressLog(currentUser.id, todayISO(), { photo_url: JSON.stringify(photos) });
+
+                showToast(`${view.toUpperCase()} photo saved!`);
             } catch (err) {
                 console.error('Upload Error:', err);
                 showToast('Upload failed', 'error');
                 preview.innerHTML = originalContent;
             } finally {
-                // Clear input value so onchange fires even for the same file if retried
                 event.target.value = '';
             }
         }

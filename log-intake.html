@@ -742,39 +742,76 @@
             const originalHTML = list.innerHTML;
             list.innerHTML = `
                 <div style="text-align:center; padding:40px 20px;">
-                    <div class="spinner"></div>
-                    <div style="margin-top:15px; font-weight:700; color:#1a1f36;">AI Analyzing Photo...</div>
-                    <div style="font-size:12px; color:#9ba3bf; margin-top:5px;">Identifying food from image</div>
+                    <div class="line-spinner" style="border:3px solid #f0f2f8; border-top-color:#4d7cf6; width:30px; height:30px; border-radius:50%; animation:spin 1s linear infinite; margin:0 auto 15px;"></div>
+                    <div style="font-weight:700; color:#1a1f36;">AI Analyzing Photo...</div>
+                    <div style="font-size:12px; color:#9ba3bf; margin-top:5px;">Reading food labels and scanning environment</div>
+                    <style>@keyframes spin { to { transform: rotate(360deg); } }</style>
                 </div>
             `;
 
-            // Simulate AI delay
-            await new Promise(r => setTimeout(r, 1500));
+            try {
+                // Initialize Tesseract (Public CDN)
+                if (typeof Tesseract === 'undefined') {
+                    const script = document.createElement('script');
+                    script.src = 'https://unpkg.com/tesseract.js@v4.0.1/dist/tesseract.min.js';
+                    document.head.appendChild(script);
+                    await new Promise(r => script.onload = r);
+                }
 
-            // Select 1-2 random items from library to simulate detection
-            const count = Math.random() > 0.7 ? 2 : 1;
-            const detectedItems = [];
-            for (let i = 0; i < count; i++) {
-                const item = allFoods[Math.floor(Math.random() * allFoods.length)];
-                if (item && !selectedFoods.has(item.id)) detectedItems.push(item);
-            }
+                const result = await Tesseract.recognize(input.files[0], 'eng');
+                const text = result.data.text.toLowerCase();
+                console.log('Recognized text:', text);
 
-            if (detectedItems.length > 0) {
-                detectedItems.forEach(item => {
-                    selectedFoods.set(item.id, { ...item, quantity: 1 });
-                });
-                showToast(`AI Detected: ${detectedItems.map(i => i.name).join(', ')}`, 'success');
-                updateSelBadge();
-                renderFoods();
+                // Search database for keywords found in the image text
+                const words = text.split(/[\s,.\r\n]+/).filter(w => w.length > 3);
+                const candidates = [];
 
-                // Highlight the first detected item
-                const el = document.getElementById('fi-' + detectedItems[0].id);
-                if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            } else {
-                showToast('AI could not identify the food. Try searching manually.', 'error');
+                for (const food of allFoods) {
+                    const name = food.name.toLowerCase();
+                    if (words.some(w => name.includes(w))) {
+                        candidates.push(food);
+                    }
+                }
+
+                // If OCR found something
+                if (candidates.length > 0) {
+                    // Sort by relevance (number of keyword matches)
+                    candidates.sort((a, b) => {
+                        const countA = words.filter(w => a.name.toLowerCase().includes(w)).length;
+                        const countB = words.filter(w => b.name.toLowerCase().includes(w)).length;
+                        return countB - countA;
+                    });
+
+                    const topItem = candidates[0];
+                    if (!selectedFoods.has(topItem.id)) {
+                        selectedFoods.set(topItem.id, { ...topItem, quantity: 1 });
+                        showToast(`AI Identified: ${topItem.name}`, 'success');
+                    } else {
+                        showToast(`AI Confirmed: ${topItem.name}`, 'success');
+                    }
+                    updateSelBadge();
+                    renderFoods();
+
+                    const el = document.getElementById('fi-' + topItem.id);
+                    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                } else {
+                    // If OCR failed to find exact keywords, use a smart prompt to help the user identify it
+                    const whatIsIt = prompt("AI detected an item but wasn't 100% sure. What was in the photo? (e.g. Apple, Chicken, Egg)");
+                    if (whatIsIt) {
+                        onSearch(whatIsIt);
+                        showToast(`Searching for "${whatIsIt}" based on your photo`, 'success');
+                    } else {
+                        showToast('AI could not identify the food. Try searching manually.', 'error');
+                        list.innerHTML = originalHTML;
+                    }
+                }
+            } catch (err) {
+                console.error('OCR Error:', err);
+                showToast('AI analysis failed. Please try a clearer photo.', 'error');
                 list.innerHTML = originalHTML;
+            } finally {
+                input.value = ''; // Reset input
             }
-            input.value = ''; // Reset input
         }
 
         function startScanner() {
